@@ -23,7 +23,8 @@ e_test_case_util.h \
 0111_transient_for_raise.c \
 0112_transient_for_lower.c \
 0113_transient_for_stack_above.c \
-0114_transient_for_stack_below.c
+0114_transient_for_stack_below.c \
+0120_notification_level.c
 
 MAINTAINERCLEANFILES = \
 Makefile.in

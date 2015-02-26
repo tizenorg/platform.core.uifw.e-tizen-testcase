@@ -86,6 +86,12 @@ _e_test_case_setup(void)
    ADD_INNER_TCS(T, 113, T_FUNC(113, transient_for_stack_above), "Transient For Stack Above", 1, 0);
    ADD_INNER_TCS(T, 114, T_FUNC(114, transient_for_stack_below), "Transient For STack Below", 1, 0);
 
+   ADD_TEST_CASE(T, 120, T_FUNC(120, notification_level), "Noti Level", 1, 0);
+   ADD_INNER_TCS(T, 121, T_FUNC(121, notification_level_1), "Noti Level 1", 1, 0);
+   ADD_INNER_TCS(T, 122, T_FUNC(122, notification_level_2), "Noti Level 2", 1, 0);
+   ADD_INNER_TCS(T, 123, T_FUNC(123, notification_level_3), "Noti Level 3", 1, 0);
+   ADD_INNER_TCS(T, 124, T_FUNC(124, notification_level_change), "Noti Level Change", 1, 0);
+
    /* [0200 - 0299] E_TEST_CASE_TYPE_WIN_ALPHA */
 #undef T
 #define T E_TEST_CASE_TYPE_WIN_ALPHA
