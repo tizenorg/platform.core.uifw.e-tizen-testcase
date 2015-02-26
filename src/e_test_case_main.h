@@ -82,6 +82,13 @@ Eina_Bool test_case_0112_transient_for_lower(E_Test_Case *tc);
 Eina_Bool test_case_0113_transient_for_stack_above(E_Test_Case *tc);
 Eina_Bool test_case_0114_transient_for_stack_below(E_Test_Case *tc);
 
+//notification_level
+Eina_Bool test_case_0120_notification_level(E_Test_Case *tc);
+Eina_Bool test_case_0121_notification_level_1(E_Test_Case *tc);
+Eina_Bool test_case_0122_notification_level_2(E_Test_Case *tc);
+Eina_Bool test_case_0123_notification_level_3(E_Test_Case *tc);
+Eina_Bool test_case_0124_notification_level_change(E_Test_Case *tc);
+
 /* 0200 - 0299 */
 /* 0300 - 9999 */
 

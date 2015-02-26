@@ -8,6 +8,7 @@ Source0: %{name}-%{version}.tar.gz
 License: BSD-2-Clause
 BuildRequires: pkgconfig(enlightenment)
 BuildRequires: pkgconfig(eldbus)
+BuildRequires: pkgconfig(capi-ui-efl-util)
 BuildRequires:  gettext
 
 %description
@@ -24,7 +25,7 @@ export LDFLAGS+=" -Wl,--hash-style=both -Wl,--as-needed -Wl,--rpath=/usr/lib"
 
 %autogen
 %configure --prefix=/usr
-make
+make %{?_smp_mflags}
 
 %install
 rm -rf %{buildroot}

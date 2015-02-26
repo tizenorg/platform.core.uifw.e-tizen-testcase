@@ -24,6 +24,7 @@ requirements="\
    elementary \
    eldbus \
    enlightenment \
+   capi-ui-efl-util \
    "
 
 PKG_CHECK_MODULES(E_TEST_CASE, [${requirements}])

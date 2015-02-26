@@ -13,12 +13,14 @@ _method_cb_get_clients(void *data EINA_UNUSED, const Eldbus_Message *msg, Eldbus
    if (eldbus_message_error_get(msg, &errname, &errmsg))
      {
         ERR("%s %s", errname, errmsg);
+        elm_exit();
         return;
      }
 
    if (!eldbus_message_arguments_get(msg, "ua(usiiiiibb)", &target_win, &array_of_ec))
      {
         ERR("Error on eldbus_message_arguments_get()\n");
+        elm_exit();
         return;
      }
 
