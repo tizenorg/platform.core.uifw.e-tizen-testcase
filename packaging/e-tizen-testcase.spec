@@ -1,3 +1,5 @@
+%bcond_with x
+
 Name: e-tizen-testcase
 Version: 0.0.1
 Release: 1
@@ -10,6 +12,10 @@ BuildRequires: pkgconfig(enlightenment)
 BuildRequires: pkgconfig(eldbus)
 BuildRequires: pkgconfig(capi-ui-efl-util)
 BuildRequires:  gettext
+
+%if !%{with x}
+ExclusiveArch:
+%endif
 
 %description
 This package is a test case module for enlightenment.
