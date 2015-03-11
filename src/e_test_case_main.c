@@ -1,4 +1,3 @@
-#include "e.h"
 #include "e_test_case_main.h"
 
 #define ADD_TEST_CASE(type_, num_, test_, name_, expect_, is_stopper_) \
@@ -11,6 +10,8 @@ Eldbus_Proxy *dbus_proxy;
 Eldbus_Object *dbus_obj;
 
 static Eina_List *tcs = NULL;
+
+int _e_tizen_testcase_log_dom = -1;
 
 static void
 _e_test_case_inner_add(E_Test_Case* gtc,
@@ -214,6 +215,13 @@ elm_main(int argc EINA_UNUSED, char **argv EINA_UNUSED)
    E_Test_Case *tc;
    Eina_List *l;
 
+   _e_tizen_testcase_log_dom = eina_log_domain_register ("e_tizen-testcase", EINA_COLOR_BLUE);
+   if(_e_tizen_testcase_log_dom < 0)
+     {
+       ERR("Impossible to create a log domain for the ecore input module.");
+       return -1;
+     }
+
    if (!eldbus_init()) return -1;
 
    /* connect to dbus */
@@ -239,6 +247,9 @@ elm_main(int argc EINA_UNUSED, char **argv EINA_UNUSED)
         E_FREE_LIST(tc->inner_tcs, free);
         E_FREE(tc);
      }
+
+   eina_log_domain_unregister(_e_tizen_testcase_log_dom);
+   _e_tizen_testcase_log_dom = -1;
 
    eldbus_proxy_unref(dbus_proxy);
    eldbus_object_unref(dbus_obj);

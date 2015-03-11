@@ -1,6 +1,88 @@
 #ifndef E_MOD_TEST_CASE_H
 #define E_MOD_TEST_CASE_H
 
+# include <Eo.h>
+# include <Eina.h>
+# include <Eet.h>
+# include <Evas.h>
+# include <Evas_Engine_Buffer.h>
+# include <Ecore.h>
+# include <Ecore_Getopt.h>
+# include <Ecore_Evas.h>
+# include <Ecore_Input.h>
+# include <Ecore_Input_Evas.h>
+# include <Ecore_Con.h>
+# include <Ecore_Ipc.h>
+# include <Ecore_File.h>
+# include <Efreet.h>
+# include <Efreet_Mime.h>
+# include <Edje.h>
+# include <Eldbus.h>
+# include <Eio.h>
+# include <Emotion.h>
+# include <Elementary.h>
+
+extern int _e_tizen_testcase_log_dom;
+
+#ifdef ERR
+# undef ERR
+#endif
+#define ERR(...) EINA_LOG_DOM_ERR(_e_tizen_testcase_log_dom, __VA_ARGS__)
+
+#ifdef DBG
+# undef DBG
+#endif
+#define DBG(...) EINA_LOG_DOM_DBG(_e_tizen_testcase_log_dom, __VA_ARGS__)
+
+#ifdef INF
+# undef INF
+#endif
+#define INF(...) EINA_LOG_DOM_INFO(_e_tizen_testcase_log_dom, __VA_ARGS__)
+
+#ifdef WRN
+# undef WRN
+#endif
+#define WRN(...) EINA_LOG_DOM_WARN(_e_tizen_testcase_log_dom, __VA_ARGS__)
+
+#ifdef CRI
+# undef CRI
+#endif
+#define CRI(...) EINA_LOG_DOM_CRIT(_e_tizen_testcase_log_dom, __VA_ARGS__)
+
+#ifdef E_REALLOC
+# undef E_REALLOC
+#endif
+# define E_REALLOC(p, s, n)   p = (s *)realloc(p, sizeof(s) * n)
+
+#ifdef E_NEW
+# undef E_NEW
+#endif
+# define E_NEW(s, n)          (s *)calloc(n, sizeof(s))
+
+#ifdef E_NEW_RAW
+# undef E_NEW_RAW
+#endif
+# define E_NEW_RAW(s, n)      (s *)malloc(n * sizeof(s))
+
+#ifdef E_FREE
+# undef E_FREE
+#endif
+# define E_FREE(p)            do { free(p); p = NULL; } while (0)
+
+#ifdef E_FREE_LIST
+# undef E_FREE_LIST
+#endif
+# define E_FREE_LIST(list, free)    \
+  do                                \
+    {                               \
+       void *_tmp_;                 \
+       EINA_LIST_FREE(list, _tmp_) \
+         {                          \
+            free(_tmp_);            \
+         }                          \
+    }                               \
+  while (0)
+
 extern Eldbus_Connection *dbus_conn;
 extern Eldbus_Proxy *dbus_proxy;
 extern Eldbus_Object *dbus_obj;

@@ -1,4 +1,3 @@
-#include "e.h"
 #include "e_test_case_main.h"
 #include "e_test_case_util.h"
 #include "0110_transient_for.h"
@@ -159,7 +158,7 @@ test_case_0110_transient_for(E_Test_Case *tc)
    E_TC_Client client = { NULL, // evas object
                           "0110_transient_for", // name
                           0, 0, 320, 320, // geometry(x,y,w,h)
-                          E_LAYER_CLIENT_NORMAL, //layer
+                          200, //E_LAYER_CLIENT_NORMAL, //layer
                           -1, -1, 0 // visible, arg, win
    };
 

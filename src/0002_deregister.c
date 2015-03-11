@@ -1,4 +1,3 @@
-#include "e.h"
 #include "e_test_case_main.h"
 
 static const Ecore_Window custom_win = 0x123456;

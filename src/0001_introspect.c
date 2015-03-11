@@ -1,4 +1,3 @@
-#include "e.h"
 #include "e_test_case_main.h"
 
 static Eina_Bool pass = EINA_FALSE;

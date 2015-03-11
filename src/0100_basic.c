@@ -1,4 +1,3 @@
-#include "e.h"
 #include "e_test_case_main.h"
 #include "0100_basic.h"
 
@@ -126,7 +125,7 @@ test_case_0100_basic(E_Test_Case *tc)
    E_TC_Client client = { NULL, // evas object
                           "0100_basic", // name
                           0, 0, 320, 320, // geometry(x,y,w,h)
-                          E_LAYER_CLIENT_NORMAL, //layer
+                          200, //E_LAYER_CLIENT_NORMAL, //layer
                           -1, -1, 0 // visible, arg, win
    };
 
