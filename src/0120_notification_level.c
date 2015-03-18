@@ -19,134 +19,21 @@ static E_TC_Win *_tc_noti_win2;
 static Eina_Bool registered;
 static Eina_Bool loop_running;
 
-static void
-_notification_level_cb_register_window(void *data,
-                                       const Eldbus_Message *msg,
-                                       Eldbus_Pending *pending EINA_UNUSED)
-{
-   Eina_Bool accepted = EINA_FALSE;
-   const char *errname, *errmsg;
-
-   EINA_SAFETY_ON_NULL_GOTO(_tc_normal_win, exit_reg_loop);
-   EINA_SAFETY_ON_NULL_GOTO(_tc_noti_win1, exit_reg_loop);
-   EINA_SAFETY_ON_NULL_GOTO(_tc_noti_win2, exit_reg_loop);
-
-   if (eldbus_message_error_get(msg, &errname, &errmsg))
-     {
-        ERR("%s %s\n", errname, errmsg);
-        goto exit_reg_loop;
-     }
-
-   if (!eldbus_message_arguments_get(msg, "b", &accepted))
-     {
-        ERR("Error on eldbus_message_arguments_get()\n");
-        goto exit_reg_loop;
-     }
-
-   if (!accepted)
-     {
-        ERR("WM rejected the request for register!!(0x%08x)\n", (Ecore_Window)data);
-        goto exit_reg_loop;
-     }
-
-   evas_object_show(_tc_normal_win->obj);
-   evas_object_show(_tc_noti_win1->obj);
-   evas_object_show(_tc_noti_win2->obj);
-
-//   INF("%s (0x%08x)\n", __FUNCTION__, (Ecore_Window)data);
-
-   registered = EINA_TRUE;
-   return;
-
-exit_reg_loop:
-   if (loop_running)
-      elm_exit();
-}
-
-static void
-_notification_level_cb_deregister_window(void *data,
-                                         const Eldbus_Message *msg,
-                                         Eldbus_Pending *pending EINA_UNUSED)
-{
-   const char *errname, *errmsg;
-   Eina_Bool allowed = EINA_TRUE;
-
-   if (eldbus_message_error_get(msg, &errname, &errmsg))
-     {
-        ERR("%s %s\n", errname, errmsg);
-        goto exit_dereg_loop;
-     }
-
-   if (!eldbus_message_arguments_get(msg, "b", &allowed))
-     {
-        ERR("Error on eldbus_message_arguments_get()\n");
-        goto exit_dereg_loop;
-     }
-
-   if (allowed)
-      goto exit_dereg_loop;
-
-   registered = EINA_FALSE;
-   return;
-
-exit_dereg_loop:
-   if (loop_running)
-      elm_exit();
-}
-
-static void
-_notification_level_cb_change_visibility(void *data,
-                                         const Eldbus_Message *msg)
-{
-   const char *errname, *errmsg;
-   Eina_Bool visible;
-   Ecore_Window win;
-
-   if (eldbus_message_error_get(msg, &errname, &errmsg))
-      ERR("%s %s", errname, errmsg);
-
-   if (!eldbus_message_arguments_get(msg, "ub", &win, &visible))
-      ERR("Error on eldbus_message_arguments_get()\n");
-
-   if ((Ecore_Window)data != win) return;
-
-   if (loop_running)
-      elm_exit();
-}
-
-static Eina_Bool
-_notification_level_visibility_change_wait(E_Test_Case *tc, E_TC_Win *tc_win)
-{
-   Eldbus_Signal_Handler *handler;
-
-   handler = eldbus_proxy_signal_handler_add(dbus_proxy, "ChangeVisibility",
-                                             _notification_level_cb_change_visibility,
-                                             (void*)(uintptr_t)tc_win->win);
-   EINA_SAFETY_ON_NULL_RETURN_VAL(handler, EINA_FALSE);
-
-   loop_running = EINA_TRUE;
-   elm_run();
-
-   eldbus_signal_handler_del(handler);
-
-   return EINA_TRUE;
-}
-
 static Eina_Bool
 _notification_level_windows_show(E_Test_Case *tc)
 {
    Eldbus_Pending *ret;
 
-   ret = eldbus_proxy_call(dbus_proxy,
-                           "RegisterWindow",
-                           _notification_level_cb_register_window,
-                           (void*)(uintptr_t)_tc_normal_win->win,
-                           -1, "u", _tc_normal_win->win);
-   EINA_SAFETY_ON_NULL_RETURN_VAL(ret, EINA_FALSE);
+   if (!(e_test_case_util_register_window(_tc_normal_win->win)))
+     return EINA_FALSE;
 
-   _notification_level_visibility_change_wait(tc, _tc_normal_win);
+   registered = EINA_TRUE;
+   evas_object_show(_tc_normal_win->obj);
+   evas_object_show(_tc_noti_win1->obj);
+   evas_object_show(_tc_noti_win2->obj);
 
-   EINA_SAFETY_ON_FALSE_RETURN_VAL(registered, EINA_FALSE);
+   if (!(e_test_case_util_wait_visibility_change(E_TEST_CASE_WAIT_VIS_TYPE_CHANGED)))
+     return EINA_FALSE;
 
    return EINA_TRUE;
 }
@@ -155,13 +42,16 @@ static void
 _notification_level_windows_hide(E_Test_Case *tc)
 {
    if (!registered) return;
-   if (!eldbus_proxy_call(dbus_proxy,
-                          "DeregisterWindow", _notification_level_cb_deregister_window,
-                          (void*)(uintptr_t)_tc_normal_win->win,
-                          -1, "u", _tc_normal_win->win))
-      return;
 
-   _notification_level_visibility_change_wait(tc, _tc_normal_win);
+   evas_object_hide(_tc_noti_win2->obj);
+   evas_object_hide(_tc_noti_win1->obj);
+   evas_object_hide(_tc_normal_win->obj);
+
+   if (e_test_case_util_deregister_window(_tc_normal_win->win))
+     return;
+
+   if (e_test_case_util_wait_visibility_change(E_TEST_CASE_WAIT_VIS_TYPE_OFF))
+     return;
 }
 
 static void
@@ -169,19 +59,16 @@ _notification_level_windows_destroy(E_Test_Case *tc)
 {
    if (_tc_noti_win2)
      {
-        evas_object_hide(_tc_noti_win2->obj);
         evas_object_del(_tc_noti_win2->obj);
         E_FREE(_tc_noti_win2);
      }
    if (_tc_noti_win1)
      {
-        evas_object_hide(_tc_noti_win1->obj);
         evas_object_del(_tc_noti_win1->obj);
         E_FREE(_tc_noti_win1);
      }
    if (_tc_normal_win)
      {
-        evas_object_hide(_tc_normal_win->obj);
         evas_object_del(_tc_normal_win->obj);
         E_FREE(_tc_normal_win);
      }

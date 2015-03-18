@@ -122,10 +122,6 @@ struct _E_TC_Data
 {
    E_TC_Client *client;
    Eina_List *clients;
-
-   Eina_List *sig_hdlrs;
-
-   Eina_Bool wait_close;
 };
 
 struct _E_TC_Client
