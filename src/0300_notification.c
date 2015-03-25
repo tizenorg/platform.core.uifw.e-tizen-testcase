@@ -1,8 +1,7 @@
-#include "e_test_case_main.h"
-#include "e_test_case_util.h"
-
 #include <efl_util.h>
+#include "e_tc_main.h"
 
+#if 0
 #define TC_NWIN_W   400
 #define TC_NWIN_H   400
 
@@ -337,3 +336,4 @@ test_shutdown:
 
    return result;
 }
+#endif

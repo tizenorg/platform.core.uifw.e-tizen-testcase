@@ -8,16 +8,12 @@ e_test_case_LDADD = \
 @E_TEST_CASE_LIBS@
 
 e_test_case_SOURCES = \
-e_test_case_main.c \
-e_test_case_main.h \
-e_test_case_util.c \
-e_test_case_util.h \
+e_tc_main.c \
+e_tc_main.h \
 0000_easy.c \
-0001_introspect.c \
-0002_deregister.c \
-0100_basic.c \
-0110_transient_for.c \
-0120_notification_level.c
+0100_base_operation.c \
+0200_transient_for.c \
+0300_notification.c
 
 MAINTAINERCLEANFILES = \
 Makefile.in
