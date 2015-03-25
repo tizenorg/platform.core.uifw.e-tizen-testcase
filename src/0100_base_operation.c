@@ -26,6 +26,9 @@ _tc_pre_run(E_TC *tc, Eina_Bool alpha)
    res = e_tc_runner_req_win_register(tc->runner, tc->data->tw);
    EINA_SAFETY_ON_FALSE_GOTO(res, cleanup);
 
+   e_tc_win_geom_update(tc->data->tw);
+   e_tc_win_show(tc->data->tw);
+
    res = e_tc_runner_ev_wait(tc->runner, E_TC_EVENT_TYPE_VIS_ON);
    EINA_SAFETY_ON_FALSE_GOTO(res, cleanup);
 
