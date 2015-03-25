@@ -11,6 +11,7 @@ _cb_method_win_info_list_get(void *data,
    Eldbus_Message_Iter *array, *ec;
    Ecore_Window target_win = 0;
    Eina_List *list = data;
+   Eina_Bool res;
 
    res = eldbus_message_error_get(msg, &name, &text);
    EINA_SAFETY_ON_FALSE_GOTO(res, finish);
@@ -175,7 +176,7 @@ _ev_wait_timeout(void *data)
 {
    E_TC_Runner *runner = data;
 
-   runner->ev_expire_timer = NULL;
+   runner->ev.expire_timer = NULL;
    runner->ev.response = E_TC_EVENT_TYPE_TIMEOUT;
 
    elm_exit();
@@ -262,7 +263,7 @@ e_tc_runner_ev_wait(E_TC_Runner *runner,
                                               "ChangeVisibility",
                                               _cb_signal_vis_changed,
                                               runner);
-         EINA_SAFETY_ON_NULL_GOTO(finish);
+         EINA_SAFETY_ON_NULL_GOTO(sh, finish);
          break;
 
       case E_TC_EVENT_TYPE_STACK_RAISE:
@@ -273,11 +274,11 @@ e_tc_runner_ev_wait(E_TC_Runner *runner,
                                               "Restack",
                                               _cb_signal_stack_changed,
                                               runner);
-         EINA_SAFETY_ON_NULL_GOTO(finish);
+         EINA_SAFETY_ON_NULL_GOTO(sh, finish);
          break;
 
       default:
-         EINA_SAFETY_ON_NULL_GOTO(finish);
+         goto finish;
          break;
      }
 
@@ -285,7 +286,7 @@ e_tc_runner_ev_wait(E_TC_Runner *runner,
 
    elm_run();
 
-   if (runner->ev_expire_timer)
+   if (runner->ev.expire_timer)
      {
         ecore_timer_del(runner->ev.expire_timer);
         runner->ev.expire_timer = NULL;
@@ -377,10 +378,6 @@ e_tc_win_info_add(Ecore_Window native_win,
    tw->alpha = alpha;
 
    return tw;
-
-err:
-   E_FREE(tw);
-   return NULL;
 }
 
 void
@@ -467,7 +464,7 @@ _e_tc_add(unsigned int num,
 }
 
 #undef TC_ADD
-#define TC_ADD(num, name, func, expect, runner) _e_tc_add(num, name, func, expect, runner)
+#define TC_ADD(num, name, func, expect) _e_tc_add(num, name, func, expect, runner)
 
 static void
 _e_tc_runner_init(E_TC_Runner *runner)
@@ -500,43 +497,40 @@ _e_tc_runner_init(E_TC_Runner *runner)
 }
 
 static void
-_e_tc_runner_shutdown(E_TC_Main_Data *data)
+_e_tc_runner_shutdown(E_TC_Runner *runner)
 {
    E_TC *tc;
 
-   EINA_LIST_FREE(data->tc_list, tc)
+   EINA_LIST_FREE(runner->tc_list, tc)
      {
         E_FREE(tc);
      }
 }
 
 static void
-_e_tc_runner_run(E_TC_Main_Data *data)
+_e_tc_runner_run(E_TC_Runner *runner)
 {
    Eina_List *l;
    E_TC *tc;
    Eina_Bool pass;
 
-   EINA_LIST_FOREACH(data->tc_list, l, tc)
+   EINA_LIST_FOREACH(runner->tc_list, l, tc)
      {
-        pass = tc->test(tc);
+        pass = tc->func(tc);
         tc->passed = (pass == tc->expect);
 
         printf("TEST \"%s\" : %s\n",
                tc->name,
                tc->passed ? "PASS" : "FAIL");
-
-        if ((!tc->passed) && (tc->is_stopper))
-          break;
      }
 }
 
 static void
-_e_tc_runner_result(E_TC_Main_Data *data)
+_e_tc_runner_result(E_TC_Runner *runner)
 {
    Eina_Strbuf *buf;
-   Eina_List *l, *ll;
-   E_TC *tc, *in_tc;
+   Eina_List *l;
+   E_TC *tc;
    int pass_case = 0;
    int fail_case = 0;
    int total = 0;
@@ -548,7 +542,7 @@ _e_tc_runner_result(E_TC_Main_Data *data)
    eina_strbuf_append(buf, "TEST CASE RESULT\n");
    eina_strbuf_append(buf, "==============================================\n");
 
-   EINA_LIST_FOREACH(data->tc_list, l, tc)
+   EINA_LIST_FOREACH(runner->tc_list, l, tc)
      {
         eina_strbuf_append_printf(buf, "[%04d] TEST \"%-25.25s\" : %s\n",
                                   tc->num, tc->name, tc->passed ? "PASS" : "FAIL");
@@ -577,8 +571,6 @@ elm_main(int argc EINA_UNUSED,
          char **argv EINA_UNUSED)
 {
    E_TC_Runner *runner = NULL;
-   E_TC *tc;
-   Eina_List *l;
    int res;
 
    runner = E_NEW(E_TC_Runner, 1);

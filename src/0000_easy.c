@@ -1,10 +1,11 @@
 #include "e_tc_main.h"
 
 static void
-_cb_introspect(void *data EINA_UNUSED,
+_cb_introspect(void *data,
                const Eldbus_Message *msg,
                Eldbus_Pending *pending EINA_UNUSED)
 {
+   E_TC *tc = data;
    const char *arg, *name = NULL, *text = NULL;
    Eina_Bool res;
 
@@ -40,6 +41,7 @@ _cb_prop_registrant(void *data,
                     const Eldbus_Message *msg,
                     Eldbus_Pending *p EINA_UNUSED)
 {
+   E_TC *tc = data;
    const char *name = NULL, *text = NULL;
    Eldbus_Message_Iter *variant = NULL;
    Ecore_Window win;
@@ -102,7 +104,7 @@ tc_0010_introspect(E_TC *tc)
 
    p = eldbus_object_introspect(tc->runner->dbus.obj,
                                 _cb_introspect,
-                                NULL);
+                                tc);
    EINA_SAFETY_ON_NULL_RETURN_VAL(p, EINA_FALSE);
 
    elm_run();

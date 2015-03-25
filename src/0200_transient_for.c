@@ -37,7 +37,7 @@ _tc_pre_run(E_TC *tc)
                                200);
    EINA_SAFETY_ON_NULL_GOTO(tc->data->tw, cleanup);
 
-   res = e_tc_win_register(tc->data->tw);
+   res = e_tc_runner_req_win_register(tc->runner, tc->data->tw);
    EINA_SAFETY_ON_FALSE_GOTO(res, cleanup);
 
    e_tc_win_geom_update(tc->data->tw_parent);
@@ -49,7 +49,7 @@ _tc_pre_run(E_TC *tc)
    e_tc_win_geom_update(tc->data->tw_child);
    e_tc_win_show(tc->data->tw_child);
 
-   res = e_tc_ev_wait(E_TC_EVENT_TYPE_VIS_ON);
+   res = e_tc_runner_ev_wait(tc->runner, E_TC_EVENT_TYPE_VIS_ON);
    EINA_SAFETY_ON_FALSE_GOTO(res, cleanup);
 
    return EINA_TRUE;
@@ -68,7 +68,7 @@ _tc_post_run(E_TC *tc)
    e_tc_win_hide(tc->data->tw);
    e_tc_win_hide(tc->data->tw_parent);
 
-   res = e_tc_ev_wait(E_TC_EVENT_TYPE_VIS_OFF);
+   res = e_tc_runner_ev_wait(tc->runner, E_TC_EVENT_TYPE_VIS_OFF);
    EINA_SAFETY_ON_FALSE_RETURN_VAL(res, EINA_FALSE);
 
    return EINA_TRUE;
@@ -79,7 +79,7 @@ _tc_shutdown(E_TC *tc)
 {
    EINA_SAFETY_ON_NULL_RETURN(tc->data);
 
-   e_tc_win_deregister(tc->data->tw);
+   e_tc_runner_req_win_deregister(tc->runner, tc->data->tw);
    e_tc_win_del(tc->data->tw_parent);
    e_tc_win_del(tc->data->tw);
    e_tc_win_del(tc->data->tw_child);
@@ -93,21 +93,21 @@ tc_0200_transient_for_basic(E_TC *tc)
    E_TC_Win *tw, *tw2, *tw_parent, *tw_child;
    E_TC_Win *tw_above = NULL;
    Eina_Bool res = EINA_FALSE;
-   Eina_List *clients, *l;
+   Eina_List *list = NULL, *l;
 
    EINA_SAFETY_ON_NULL_RETURN_VAL(tc, EINA_FALSE);
 
    res = _tc_pre_run(tc);
    EINA_SAFETY_ON_FALSE_GOTO(res, cleanup);
 
-   clients = e_tc_req_clients_info_get(tc->main_data);
-   EINA_SAFETY_ON_NULL_GOTO(clients, cleanup);
+   list = e_tc_runner_req_win_info_list_get(tc->runner);
+   EINA_SAFETY_ON_NULL_GOTO(list, cleanup);
 
    tw = tc->data->tw;
    tw_parent = tc->data->tw_parent;
    tw_child = tc->data->tw_child;
 
-   EINA_LIST_FOREACH(clients, l, tw2)
+   EINA_LIST_FOREACH(list, l, tw2)
      {
         if (tw2->layer > tw->layer) continue;
         if (tw2->layer < tw->layer) break;
@@ -132,7 +132,7 @@ tc_0200_transient_for_basic(E_TC *tc)
 
 cleanup:
    _tc_shutdown(tc);
-   E_FREE_LIST(clients, e_tc_win_del);
+   E_FREE_LIST(list, e_tc_win_del);
 
    return tc->passed;
 }
@@ -142,7 +142,7 @@ tc_0201_transient_for_raise(E_TC *tc)
 {
    E_TC_Win *tw, *tw2;
    Eina_Bool res = EINA_FALSE;
-   Eina_List *clients;
+   Eina_List *list = NULL;
 
    EINA_SAFETY_ON_NULL_RETURN_VAL(tc, EINA_FALSE);
 
@@ -151,16 +151,15 @@ tc_0201_transient_for_raise(E_TC *tc)
 
    tw = tc->data->tw;
 
-   res = e_tc_win_stack_change(tw, NULL, EINA_TRUE);
+   e_tc_win_stack_change(tw, NULL, EINA_TRUE);
+
+   res = e_tc_runner_ev_wait(tc->runner, E_TC_EVENT_TYPE_STACK_RAISE);
    EINA_SAFETY_ON_FALSE_GOTO(res, cleanup);
 
-   res = e_tc_ev_wait(E_TC_EVENT_TYPE_STACK_RAISE);
-   EINA_SAFETY_ON_FALSE_GOTO(res, cleanup);
+   list = e_tc_runner_req_win_info_list_get(tc->runner);
+   EINA_SAFETY_ON_NULL_GOTO(list, cleanup);
 
-   clients = e_tc_req_clients_info_get(tc->main_data);
-   EINA_SAFETY_ON_NULL_GOTO(clients, cleanup);
-
-   tw2 = eina_list_nth(clients, 0);
+   tw2 = eina_list_nth(list, 0);
    EINA_SAFETY_ON_NULL_GOTO(tw2, cleanup);
    EINA_SAFETY_ON_FALSE_GOTO(tw2->native_win == tw->native_win, cleanup);
 
@@ -171,7 +170,7 @@ tc_0201_transient_for_raise(E_TC *tc)
 
 cleanup:
    _tc_shutdown(tc);
-   E_FREE_LIST(clients, e_tc_win_del);
+   E_FREE_LIST(list, e_tc_win_del);
 
    return tc->passed;
 }
@@ -181,7 +180,7 @@ tc_0202_transient_for_lower(E_TC *tc)
 {
    E_TC_Win *tw, *tw2;
    Eina_Bool res = EINA_FALSE;
-   Eina_List *clients;
+   Eina_List *list = NULL;
 
    EINA_SAFETY_ON_NULL_RETURN_VAL(tc, EINA_FALSE);
 
@@ -190,16 +189,15 @@ tc_0202_transient_for_lower(E_TC *tc)
 
    tw = tc->data->tw;
 
-   res = e_tc_win_stack_change(tw, NULL, EINA_FALSE);
+   e_tc_win_stack_change(tw, NULL, EINA_FALSE);
+
+   res = e_tc_runner_ev_wait(tc->runner, E_TC_EVENT_TYPE_STACK_LOWER);
    EINA_SAFETY_ON_FALSE_GOTO(res, cleanup);
 
-   res = e_tc_ev_wait(E_TC_EVENT_TYPE_STACK_LOWER);
-   EINA_SAFETY_ON_FALSE_GOTO(res, cleanup);
+   list = e_tc_runner_req_win_info_list_get(tc->runner);
+   EINA_SAFETY_ON_NULL_GOTO(list, cleanup);
 
-   clients = e_tc_req_clients_info_get(tc->main_data);
-   EINA_SAFETY_ON_NULL_GOTO(clients, cleanup);
-
-   tw2 = eina_list_last_data_get(clients);
+   tw2 = eina_list_last_data_get(list);
    EINA_SAFETY_ON_NULL_GOTO(tw2, cleanup);
    EINA_SAFETY_ON_FALSE_GOTO(tw2->native_win == tw->native_win, cleanup);
 
@@ -210,7 +208,7 @@ tc_0202_transient_for_lower(E_TC *tc)
 
 cleanup:
    _tc_shutdown(tc);
-   E_FREE_LIST(clients, e_tc_win_del);
+   E_FREE_LIST(list, e_tc_win_del);
 
    return tc->passed;
 }
@@ -221,7 +219,7 @@ tc_0203_transient_for_stack_above(E_TC *tc)
    E_TC_Win *tw, *tw2, *tw_parent, *tw_child;
    E_TC_Win *tw_above = NULL;
    Eina_Bool res = EINA_FALSE;
-   Eina_List *clients, *l;
+   Eina_List *list = NULL, *l;
 
    EINA_SAFETY_ON_NULL_RETURN_VAL(tc, EINA_FALSE);
 
@@ -232,16 +230,15 @@ tc_0203_transient_for_stack_above(E_TC *tc)
    tw_parent = tc->data->tw_parent;
    tw_child = tc->data->tw_child;
 
-   res = e_tc_win_stack_change(tw_parent, tw, EINA_TRUE);
+   e_tc_win_stack_change(tw_parent, tw, EINA_TRUE);
+
+   res = e_tc_runner_ev_wait(tc->runner, E_TC_EVENT_TYPE_STACK_ABOVE);
    EINA_SAFETY_ON_FALSE_GOTO(res, cleanup);
 
-   res = e_tc_ev_wait(E_TC_EVENT_TYPE_STACK_ABOVE);
-   EINA_SAFETY_ON_FALSE_GOTO(res, cleanup);
+   list = e_tc_runner_req_win_info_list_get(tc->runner);
+   EINA_SAFETY_ON_NULL_GOTO(list, cleanup);
 
-   clients = e_tc_req_clients_info_get(tc->main_data);
-   EINA_SAFETY_ON_NULL_GOTO(clients, cleanup);
-
-   EINA_LIST_FOREACH(clients, l, tw2)
+   EINA_LIST_FOREACH(list, l, tw2)
      {
         if (tw2->layer > tw->layer) continue;
         if (tw2->layer < tw->layer) break;
@@ -264,7 +261,7 @@ tc_0203_transient_for_stack_above(E_TC *tc)
 
 cleanup:
    _tc_shutdown(tc);
-   E_FREE_LIST(clients, e_tc_win_del);
+   E_FREE_LIST(list, e_tc_win_del);
 
    return tc->passed;
 }
@@ -275,7 +272,7 @@ tc_0204_transient_for_stack_below(E_TC *tc)
    E_TC_Win *tw, *tw2, *tw_parent, *tw_child;
    E_TC_Win *tw_above = NULL;
    Eina_Bool res = EINA_FALSE;
-   Eina_List *clients, *l;
+   Eina_List *list = NULL, *l;
 
    EINA_SAFETY_ON_NULL_RETURN_VAL(tc, EINA_FALSE);
 
@@ -286,16 +283,15 @@ tc_0204_transient_for_stack_below(E_TC *tc)
    tw_parent = tc->data->tw_parent;
    tw_child = tc->data->tw_child;
 
-   res = e_tc_win_stack_change(tw_parent, tw, EINA_FALSE);
+   e_tc_win_stack_change(tw_parent, tw, EINA_FALSE);
+
+   res = e_tc_runner_ev_wait(tc->runner, E_TC_EVENT_TYPE_STACK_BELOW);
    EINA_SAFETY_ON_FALSE_GOTO(res, cleanup);
 
-   res = e_tc_ev_wait(E_TC_EVENT_TYPE_STACK_BELOW);
-   EINA_SAFETY_ON_FALSE_GOTO(res, cleanup);
+   list = e_tc_runner_req_win_info_list_get(tc->runner);
+   EINA_SAFETY_ON_NULL_GOTO(list, cleanup);
 
-   clients = e_tc_req_clients_info_get(tc->main_data);
-   EINA_SAFETY_ON_NULL_GOTO(clients, cleanup);
-
-   EINA_LIST_FOREACH(clients, l, tw2)
+   EINA_LIST_FOREACH(list, l, tw2)
      {
         if (tw2->layer > tw->layer) continue;
         if (tw2->layer < tw->layer) break;
@@ -327,7 +323,7 @@ tc_0204_transient_for_stack_below(E_TC *tc)
 
 cleanup:
    _tc_shutdown(tc);
-   E_FREE_LIST(clients, e_tc_win_del);
+   E_FREE_LIST(list, e_tc_win_del);
 
    return tc->passed;
 }
