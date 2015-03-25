@@ -10,7 +10,7 @@ _cb_introspect(void *data,
    Eina_Bool res;
 
    res = eldbus_message_error_get(msg, &name, &text);
-   EINA_SAFETY_ON_FALSE_GOTO(res, finish);
+   EINA_SAFETY_ON_TRUE_GOTO(res, finish);
 
    res = eldbus_message_arguments_get(msg, "s", &arg);
    EINA_SAFETY_ON_FALSE_GOTO(res, finish);
@@ -51,7 +51,7 @@ _cb_prop_registrant(void *data,
    tc->passed = EINA_FALSE;
 
    res = eldbus_message_error_get(msg, &name, &text);
-   EINA_SAFETY_ON_FALSE_GOTO(res, finish);
+   EINA_SAFETY_ON_TRUE_GOTO(res, finish);
 
    res = eldbus_message_arguments_get(msg, "v", &variant);
    EINA_SAFETY_ON_FALSE_GOTO(res, finish);

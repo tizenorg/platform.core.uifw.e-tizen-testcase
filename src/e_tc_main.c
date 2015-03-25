@@ -14,7 +14,7 @@ _cb_method_win_info_list_get(void *data,
    Eina_Bool res;
 
    res = eldbus_message_error_get(msg, &name, &text);
-   EINA_SAFETY_ON_FALSE_GOTO(res, finish);
+   EINA_SAFETY_ON_TRUE_GOTO(res, finish);
 
    res = eldbus_message_arguments_get(msg, "ua(usiiiiibb)", &target_win, &array);
    EINA_SAFETY_ON_FALSE_GOTO(res, finish);
@@ -64,20 +64,18 @@ _cb_method_window_register(void *data,
                            const Eldbus_Message *msg,
                            Eldbus_Pending *p EINA_UNUSED)
 {
-   E_TC *tc = (E_TC *)data;
    const char *name = NULL, *text = NULL;
    Eina_Bool res;
    Eina_Bool *accepted = data;
 
-   EINA_SAFETY_ON_NULL_GOTO(tc, finish);
-
    *accepted = EINA_FALSE;
 
    res = eldbus_message_error_get(msg, &name, &text);
-   EINA_SAFETY_ON_FALSE_GOTO(res, finish);
+   EINA_SAFETY_ON_TRUE_GOTO(res, finish);
 
    res = eldbus_message_arguments_get(msg, "b", accepted);
    EINA_SAFETY_ON_FALSE_GOTO(res, finish);
+   EINA_SAFETY_ON_FALSE_GOTO(*accepted, finish);
 
 finish:
    if ((name) || (text))
@@ -100,10 +98,11 @@ _cb_method_window_deregister(void *data,
    *allowed = EINA_FALSE;
 
    res = eldbus_message_error_get(msg, &name, &text);
-   EINA_SAFETY_ON_FALSE_GOTO(res, finish);
+   EINA_SAFETY_ON_TRUE_GOTO(res, finish);
 
-   res = eldbus_message_arguments_get(msg, "b", &allowed);
+   res = eldbus_message_arguments_get(msg, "b", allowed);
    EINA_SAFETY_ON_FALSE_GOTO(res, finish);
+   EINA_SAFETY_ON_FALSE_GOTO(*allowed, finish);
 
 finish:
    if ((name) || (text))
@@ -125,7 +124,7 @@ _cb_signal_vis_changed(void *data,
    Ecore_Window id;
 
    res = eldbus_message_error_get(msg, &name, &text);
-   EINA_SAFETY_ON_FALSE_GOTO(res, finish);
+   EINA_SAFETY_ON_TRUE_GOTO(res, finish);
 
    res = eldbus_message_arguments_get(msg, "ub", &id, &vis);
    EINA_SAFETY_ON_FALSE_GOTO(res, finish);
@@ -154,7 +153,7 @@ _cb_signal_stack_changed(void *data,
    Eina_Bool res;
 
    res = eldbus_message_error_get(msg, &name, &text);
-   EINA_SAFETY_ON_FALSE_GOTO(res, finish);
+   EINA_SAFETY_ON_TRUE_GOTO(res, finish);
 
    /* TODO */
    if ((E_TC_EVENT_TYPE_STACK_RAISE <= runner->ev.expect) &&
@@ -178,6 +177,8 @@ _ev_wait_timeout(void *data)
 
    runner->ev.expire_timer = NULL;
    runner->ev.response = E_TC_EVENT_TYPE_TIMEOUT;
+
+   ERR("ev:%d\n", runner->ev.expect);
 
    elm_exit();
 
@@ -295,6 +296,7 @@ e_tc_runner_ev_wait(E_TC_Runner *runner,
    eldbus_signal_handler_del(sh);
 
    res = (runner->ev.response == runner->ev.expect);
+   EINA_SAFETY_ON_FALSE_GOTO(res, finish);
 
 finish:
    runner->ev.expect = E_TC_EVENT_TYPE_NONE;
@@ -316,7 +318,7 @@ e_tc_win_add(E_TC_Win *parent,
    Evas_Object *elm_win = NULL, *bg = NULL;
    Evas_Object *p_elm_win = NULL;
 
-   if (parent) p_elm_win = tw->elm_win;
+   if (parent) p_elm_win = parent->elm_win;
 
    elm_win = elm_win_add(p_elm_win, name, ELM_WIN_BASIC);
    EINA_SAFETY_ON_NULL_GOTO(elm_win, err);
@@ -544,23 +546,20 @@ _e_tc_runner_result(E_TC_Runner *runner)
 
    EINA_LIST_FOREACH(runner->tc_list, l, tc)
      {
-        eina_strbuf_append_printf(buf, "[%04d] TEST \"%-25.25s\" : %s\n",
-                                  tc->num, tc->name, tc->passed ? "PASS" : "FAIL");
+        eina_strbuf_append_printf(buf,
+                                  "[%04d] TEST \"%-30.30s\" : %s\n",
+                                  tc->num,
+                                  tc->name,
+                                  tc->passed ? "PASS" : "FAIL");
 
         total++;
-        tc->passed? pass_case++ : fail_case++;
-
-        if (!tc->passed)
-          {
-             eina_strbuf_append_printf(buf, "\n!!Test Case failed at \"%s\"\n", tc->name);
-             break;
-          }
+        tc->passed ? pass_case++ : fail_case++;
      }
 
    eina_strbuf_append(buf, "==============================================\n");
-   eina_strbuf_append_printf(buf, "TOTAL: %4d Case\n", total);
-   eina_strbuf_append_printf(buf, "PASS : %4d Case\n", pass_case);
-   eina_strbuf_append_printf(buf, "FAIL : %4d Case\n", fail_case);
+   eina_strbuf_append_printf(buf, "TOTAL: %4d Cases\n", total);
+   eina_strbuf_append_printf(buf, "PASS : %4d Cases\n", pass_case);
+   eina_strbuf_append_printf(buf, "FAIL : %4d Cases\n", fail_case);
    eina_strbuf_append(buf, "==============================================\n");
 
    printf("%s", eina_strbuf_string_get(buf));
