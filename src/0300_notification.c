@@ -1,5 +1,5 @@
 #include <efl_util.h>
-#include "e_tc_main.h"
+#include "e_test_runner.h"
 
 #if 0
 #define TC_NWIN_W   400

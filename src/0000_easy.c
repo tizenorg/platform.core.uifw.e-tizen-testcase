@@ -1,4 +1,4 @@
-#include "e_tc_main.h"
+#include "e_test_runner.h"
 
 static void
 _cb_introspect(void *data,
@@ -15,14 +15,15 @@ _cb_introspect(void *data,
    res = eldbus_message_arguments_get(msg, "s", &arg);
    EINA_SAFETY_ON_FALSE_GOTO(res, finish);
 
-   if ((!strstr(arg, "method name=\"RegisterWindow\""  )) ||
-       (!strstr(arg, "method name=\"DeregisterWindow\"")) ||
-       (!strstr(arg, "method name=\"GetClients\""      )) ||
-       (!strstr(arg, "method name=\"ChangeStack\""     )) ||
-       (!strstr(arg, "signal name=\"ChangeVisibility\"")) ||
-       (!strstr(arg, "signal name=\"Restack\""         )) ||
-       (!strstr(arg, "property name=\"Registrant\""    )))
+   if ((!strstr(arg, "method name=\"RegisterWindow\""   )) ||
+       (!strstr(arg, "method name=\"DeregisterWindow\"" )) ||
+       (!strstr(arg, "method name=\"SetWindowStack\""   )) ||
+       (!strstr(arg, "method name=\"GetWindowInfo\""    )) ||
+       (!strstr(arg, "signal name=\"VisibilityChanged\"")) ||
+       (!strstr(arg, "signal name=\"StackChanged\""     )) ||
+       (!strstr(arg, "property name=\"Registrant\""     )))
      {
+        ERR("missing mehod, signal or property:%s\n", arg);
         goto finish;
      }
 
@@ -125,7 +126,7 @@ tc_0011_win_register(E_TC *tc)
    EINA_SAFETY_ON_NULL_GOTO(tw, finish);
 
    /* check RegisterWindow method */
-   res = e_tc_runner_req_win_register(tc->runner, tw);
+   res = e_test_runner_req_win_register(tc->runner, tw);
    EINA_SAFETY_ON_FALSE_GOTO(res, finish);
 
    /* check whether registered window id is same */
@@ -139,7 +140,7 @@ tc_0011_win_register(E_TC *tc)
    EINA_SAFETY_ON_FALSE_RETURN_VAL(tc->passed, EINA_FALSE);
 
    /* check DeregisterWindow method */
-   res = e_tc_runner_req_win_deregister(tc->runner, tw);
+   res = e_test_runner_req_win_deregister(tc->runner, tw);
    EINA_SAFETY_ON_FALSE_GOTO(res, finish);
 
    tc->passed = EINA_TRUE;

@@ -1,4 +1,4 @@
-#include "e_tc_main.h"
+#include "e_test_runner.h"
 
 int _log_dom = -1;
 
@@ -117,7 +117,7 @@ static void
 _cb_signal_vis_changed(void *data,
                        const Eldbus_Message *msg)
 {
-   E_TC_Runner *runner = data;
+   E_Test_Runner *runner = data;
    const char *name = NULL, *text = NULL;
    Eina_Bool res;
    int vis = 0;
@@ -148,7 +148,7 @@ static void
 _cb_signal_stack_changed(void *data,
                          const Eldbus_Message *msg)
 {
-   E_TC_Runner *runner = data;
+   E_Test_Runner *runner = data;
    const char *name = NULL, *text = NULL;
    Eina_Bool res;
 
@@ -173,7 +173,7 @@ finish:
 static Eina_Bool
 _ev_wait_timeout(void *data)
 {
-   E_TC_Runner *runner = data;
+   E_Test_Runner *runner = data;
 
    runner->ev.expire_timer = NULL;
    runner->ev.response = E_TC_EVENT_TYPE_TIMEOUT;
@@ -186,8 +186,8 @@ _ev_wait_timeout(void *data)
 }
 
 Eina_Bool
-e_tc_runner_req_win_register(E_TC_Runner *runner,
-                             E_TC_Win *tw)
+e_test_runner_req_win_register(E_Test_Runner *runner,
+                               E_TC_Win *tw)
 {
    Eldbus_Pending *p;
    Eina_Bool accepted = EINA_FALSE;
@@ -207,8 +207,8 @@ e_tc_runner_req_win_register(E_TC_Runner *runner,
 }
 
 Eina_Bool
-e_tc_runner_req_win_deregister(E_TC_Runner *runner,
-                               E_TC_Win *tw)
+e_test_runner_req_win_deregister(E_Test_Runner *runner,
+                                 E_TC_Win *tw)
 {
    Eldbus_Pending *p;
    Eina_Bool allowed = EINA_FALSE;
@@ -228,7 +228,7 @@ e_tc_runner_req_win_deregister(E_TC_Runner *runner,
 }
 
 Eina_List *
-e_tc_runner_req_win_info_list_get(E_TC_Runner *runner)
+e_test_runner_req_win_info_list_get(E_Test_Runner *runner)
 {
    Eldbus_Pending *p;
    Eina_List *list = NULL;
@@ -247,8 +247,8 @@ e_tc_runner_req_win_info_list_get(E_TC_Runner *runner)
 }
 
 Eina_Bool
-e_tc_runner_ev_wait(E_TC_Runner *runner,
-                    E_TC_Event_Type ev)
+e_test_runner_ev_wait(E_Test_Runner *runner,
+                      E_TC_Event_Type ev)
 {
    Eldbus_Signal_Handler *sh;
    Eina_Bool res = EINA_FALSE;
@@ -261,7 +261,7 @@ e_tc_runner_ev_wait(E_TC_Runner *runner,
       case E_TC_EVENT_TYPE_VIS_ON:
       case E_TC_EVENT_TYPE_VIS_OFF:
          sh = eldbus_proxy_signal_handler_add(runner->dbus.proxy,
-                                              "ChangeVisibility",
+                                              "VisibilityChanged",
                                               _cb_signal_vis_changed,
                                               runner);
          EINA_SAFETY_ON_NULL_GOTO(sh, finish);
@@ -272,7 +272,7 @@ e_tc_runner_ev_wait(E_TC_Runner *runner,
       case E_TC_EVENT_TYPE_STACK_ABOVE:
       case E_TC_EVENT_TYPE_STACK_BELOW:
          sh = eldbus_proxy_signal_handler_add(runner->dbus.proxy,
-                                              "ChangeStack",
+                                              "StackChanged",
                                               _cb_signal_stack_changed,
                                               runner);
          EINA_SAFETY_ON_NULL_GOTO(sh, finish);
@@ -288,7 +288,7 @@ e_tc_runner_ev_wait(E_TC_Runner *runner,
 
    runner->ev.expect = ev;
    runner->ev.response = E_TC_EVENT_TYPE_NONE;
-   runner->ev.expire_timer = ecore_timer_add(2.0, _ev_wait_timeout, runner);
+   runner->ev.expire_timer = ecore_timer_add(5.0, _ev_wait_timeout, runner);
 
    elm_run();
 
@@ -453,7 +453,7 @@ _e_tc_add(unsigned int num,
           const char *name,
           Eina_Bool (*func)(E_TC*),
           Eina_Bool expect,
-          E_TC_Runner *runner)
+          E_Test_Runner *runner)
 {
    E_TC *tc;
 
@@ -474,7 +474,7 @@ _e_tc_add(unsigned int num,
 #define TC_ADD(num, name, func, expect) _e_tc_add(num, name, func, expect, runner)
 
 static void
-_e_tc_runner_init(E_TC_Runner *runner)
+_e_test_runner_init(E_Test_Runner *runner)
 {
 #undef T_FUNC
 #define T_FUNC(num_, test_) tc_000##num_##_##test_
@@ -504,7 +504,7 @@ _e_tc_runner_init(E_TC_Runner *runner)
 }
 
 static void
-_e_tc_runner_shutdown(E_TC_Runner *runner)
+_e_test_runner_shutdown(E_Test_Runner *runner)
 {
    E_TC *tc;
 
@@ -515,7 +515,7 @@ _e_tc_runner_shutdown(E_TC_Runner *runner)
 }
 
 static void
-_e_tc_runner_run(E_TC_Runner *runner)
+_e_test_runner_run(E_Test_Runner *runner)
 {
    Eina_List *l;
    E_TC *tc;
@@ -533,7 +533,7 @@ _e_tc_runner_run(E_TC_Runner *runner)
 }
 
 static void
-_e_tc_runner_result(E_TC_Runner *runner)
+_e_test_runner_result(E_Test_Runner *runner)
 {
    Eina_Strbuf *buf;
    Eina_List *l;
@@ -574,10 +574,10 @@ EAPI_MAIN int
 elm_main(int argc EINA_UNUSED,
          char **argv EINA_UNUSED)
 {
-   E_TC_Runner *runner = NULL;
+   E_Test_Runner *runner = NULL;
    int res;
 
-   runner = E_NEW(E_TC_Runner, 1);
+   runner = E_NEW(E_Test_Runner, 1);
    EINA_SAFETY_ON_NULL_GOTO(runner, err);
 
    _log_dom = eina_log_domain_register("e-tc", EINA_COLOR_BLUE);
@@ -614,10 +614,10 @@ elm_main(int argc EINA_UNUSED,
         goto err;
      }
 
-   _e_tc_runner_init(runner);
-   _e_tc_runner_run(runner);
-   _e_tc_runner_result(runner);
-   _e_tc_runner_shutdown(runner);
+   _e_test_runner_init(runner);
+   _e_test_runner_run(runner);
+   _e_test_runner_result(runner);
+   _e_test_runner_shutdown(runner);
 
    eldbus_proxy_unref(runner->dbus.proxy);
    eldbus_object_unref(runner->dbus.obj);

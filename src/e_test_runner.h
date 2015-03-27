@@ -68,12 +68,12 @@ typedef enum _E_TC_Event_Type
    E_TC_EVENT_TYPE_MAX
 } E_TC_Event_Type;
 
-typedef struct _E_TC_Runner E_TC_Runner;
-typedef struct _E_TC_Win    E_TC_Win;
-typedef struct _E_TC        E_TC;
-typedef struct _E_TC_Data   E_TC_Data;
+typedef struct _E_Test_Runner E_Test_Runner;
+typedef struct _E_TC_Win      E_TC_Win;
+typedef struct _E_TC          E_TC;
+typedef struct _E_TC_Data     E_TC_Data;
 
-struct _E_TC_Runner
+struct _E_Test_Runner
 {
    Eina_List   *tc_list; // test suite
 
@@ -105,19 +105,19 @@ struct _E_TC_Win
 
 struct _E_TC
 {
-   const char  *name;
-   unsigned int num;
-   Eina_Bool    (*func) (E_TC *tc);
-   Eina_Bool    passed;
-   Eina_Bool    expect;
-   E_TC_Runner *runner;
-   E_TC_Data   *data;
+   const char    *name;
+   unsigned int   num;
+   Eina_Bool      (*func) (E_TC *tc);
+   Eina_Bool      passed;
+   Eina_Bool      expect;
+   E_Test_Runner *runner;
+   E_TC_Data     *data;
 };
 
-Eina_Bool  e_tc_runner_req_win_register(E_TC_Runner *runner, E_TC_Win *tw);
-Eina_Bool  e_tc_runner_req_win_deregister(E_TC_Runner *runner, E_TC_Win *tw);
-Eina_List *e_tc_runner_req_win_info_list_get(E_TC_Runner *runner);
-Eina_Bool  e_tc_runner_ev_wait(E_TC_Runner *runner, E_TC_Event_Type ev);
+Eina_Bool  e_test_runner_req_win_register(E_Test_Runner *runner, E_TC_Win *tw);
+Eina_Bool  e_test_runner_req_win_deregister(E_Test_Runner *runner, E_TC_Win *tw);
+Eina_List *e_test_runner_req_win_info_list_get(E_Test_Runner *runner);
+Eina_Bool  e_test_runner_ev_wait(E_Test_Runner *runner, E_TC_Event_Type ev);
 
 E_TC_Win  *e_tc_win_add(E_TC_Win *parent, Elm_Win_Type type, Eina_Bool alpha, const char *name, int x, int y, int w, int h, int layer);
 E_TC_Win  *e_tc_win_info_add(Ecore_Window native_win, Eina_Bool alpha, const char *name, int x, int y, int w, int h, int layer);

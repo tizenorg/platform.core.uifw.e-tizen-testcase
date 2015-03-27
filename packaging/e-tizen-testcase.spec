@@ -3,7 +3,7 @@
 Name: e-tizen-testcase
 Version: 0.0.1
 Release: 1
-Summary: The test case module for enlightenment
+Summary: The test case runner for enlightenment
 URL: http://www.enlightenment.org
 Group: Graphics & UI Framework/Other
 Source0: %{name}-%{version}.tar.gz
@@ -18,7 +18,7 @@ ExclusiveArch:
 %endif
 
 %description
-This package is a test case module for enlightenment.
+This package is a test case runner for enlightenment.
 
 %prep
 %setup -q
@@ -46,4 +46,4 @@ make install DESTDIR=%{buildroot}
 %files
 %defattr(-,root,root,-)
 /usr/share/license/%{name}
-%{_bindir}/e_test_case
+%{_bindir}/e_test_runner

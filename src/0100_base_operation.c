@@ -1,4 +1,4 @@
-#include "e_tc_main.h"
+#include "e_test_runner.h"
 
 struct _E_TC_Data
 {
@@ -23,13 +23,13 @@ _tc_pre_run(E_TC *tc, Eina_Bool alpha)
                                200);
    EINA_SAFETY_ON_NULL_GOTO(tc->data->tw, cleanup);
 
-   res = e_tc_runner_req_win_register(tc->runner, tc->data->tw);
+   res = e_test_runner_req_win_register(tc->runner, tc->data->tw);
    EINA_SAFETY_ON_FALSE_GOTO(res, cleanup);
 
    e_tc_win_geom_update(tc->data->tw);
    e_tc_win_show(tc->data->tw);
 
-   res = e_tc_runner_ev_wait(tc->runner, E_TC_EVENT_TYPE_VIS_ON);
+   res = e_test_runner_ev_wait(tc->runner, E_TC_EVENT_TYPE_VIS_ON);
    EINA_SAFETY_ON_FALSE_GOTO(res, cleanup);
 
    return EINA_TRUE;
@@ -46,9 +46,6 @@ _tc_post_run(E_TC *tc)
 
    e_tc_win_hide(tc->data->tw);
 
-   res = e_tc_runner_ev_wait(tc->runner, E_TC_EVENT_TYPE_VIS_OFF);
-   EINA_SAFETY_ON_FALSE_RETURN_VAL(res, EINA_FALSE);
-
    return EINA_TRUE;
 }
 
@@ -57,7 +54,7 @@ _tc_shutdown(E_TC *tc)
 {
    EINA_SAFETY_ON_NULL_RETURN(tc->data);
 
-   e_tc_runner_req_win_deregister(tc->runner, tc->data->tw);
+   e_test_runner_req_win_deregister(tc->runner, tc->data->tw);
    e_tc_win_del(tc->data->tw);
 
    E_FREE(tc->data);
@@ -98,7 +95,7 @@ tc_0101_win_stack(E_TC *tc)
 
    tw = tc->data->tw;
 
-   list = e_tc_runner_req_win_info_list_get(tc->runner);
+   list = e_test_runner_req_win_info_list_get(tc->runner);
    EINA_SAFETY_ON_NULL_GOTO(list, cleanup);
 
    EINA_LIST_FOREACH(list, l, tw2)
@@ -161,7 +158,7 @@ tc_0111_alpha_win_stack(E_TC *tc)
 
    tw = tc->data->tw;
 
-   list = e_tc_runner_req_win_info_list_get(tc->runner);
+   list = e_test_runner_req_win_info_list_get(tc->runner);
    EINA_SAFETY_ON_NULL_GOTO(list, cleanup);
 
    EINA_LIST_FOREACH(list, l, tw2)
