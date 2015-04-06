@@ -42,8 +42,6 @@ cleanup:
 static Eina_Bool
 _tc_post_run(E_TC *tc)
 {
-   Eina_Bool res = EINA_FALSE;
-
    e_tc_win_hide(tc->data->tw);
 
    return EINA_TRUE;
