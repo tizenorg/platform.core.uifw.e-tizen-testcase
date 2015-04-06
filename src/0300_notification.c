@@ -1,339 +1,271 @@
 #include <efl_util.h>
 #include "e_test_runner.h"
 
-#if 0
-#define TC_NWIN_W   400
-#define TC_NWIN_H   400
+#define TW_W   400
+#define TW_H   400
 
-typedef struct
+struct _E_TC_Data
 {
-   Evas_Object *obj;
-   Ecore_Window win;
-} E_TC_Win;
+   E_TC_Win *tw_normal;
+   E_TC_Win *tw_noti1;
+   E_TC_Win *tw_noti2;
+};
 
-static E_TC_Win *_tc_normal_win;
-static E_TC_Win *_tc_noti_win1;
-static E_TC_Win *_tc_noti_win2;
-
-static Eina_Bool registered;
-static Eina_Bool loop_running;
-
-static Eina_Bool
-_notification_level_windows_show(E_Test_Case *tc)
+static void
+_tc_shutdown(E_TC *tc)
 {
-   Eldbus_Pending *ret;
+   E_TC_Data *data = tc->data;
+   EINA_SAFETY_ON_NULL_RETURN(data);
 
-   if (!(e_test_case_util_register_window(_tc_normal_win->win)))
-     return EINA_FALSE;
+   e_test_runner_req_win_deregister(tc->runner, data->tw_normal);
+   e_tc_win_del(data->tw_normal);
+   e_tc_win_del(data->tw_noti1);
+   e_tc_win_del(data->tw_noti2);
 
-   registered = EINA_TRUE;
-   evas_object_show(_tc_normal_win->obj);
-   evas_object_show(_tc_noti_win1->obj);
-   evas_object_show(_tc_noti_win2->obj);
-
-   if (!(e_test_case_util_wait_visibility_change(E_TEST_CASE_WAIT_VIS_TYPE_CHANGED)))
-     return EINA_FALSE;
-
-   return EINA_TRUE;
+   E_FREE(data);
+   tc->data = NULL;
 }
 
 static void
-_notification_level_windows_hide(E_Test_Case *tc)
+_tc_post_run(E_TC *tc)
 {
-   if (!registered) return;
+   E_TC_Data *data = tc->data;
+   EINA_SAFETY_ON_NULL_RETURN(data);
 
-   evas_object_hide(_tc_noti_win2->obj);
-   evas_object_hide(_tc_noti_win1->obj);
-   evas_object_hide(_tc_normal_win->obj);
-
-   if (e_test_case_util_deregister_window(_tc_normal_win->win))
-     return;
-
-   if (e_test_case_util_wait_visibility_change(E_TEST_CASE_WAIT_VIS_TYPE_OFF))
-     return;
-}
-
-static void
-_notification_level_windows_destroy(E_Test_Case *tc)
-{
-   if (_tc_noti_win2)
-     {
-        evas_object_del(_tc_noti_win2->obj);
-        E_FREE(_tc_noti_win2);
-     }
-   if (_tc_noti_win1)
-     {
-        evas_object_del(_tc_noti_win1->obj);
-        E_FREE(_tc_noti_win1);
-     }
-   if (_tc_normal_win)
-     {
-        evas_object_del(_tc_normal_win->obj);
-        E_FREE(_tc_normal_win);
-     }
+   e_tc_win_hide(data->tw_normal);
+   e_tc_win_hide(data->tw_noti1);
+   e_tc_win_hide(data->tw_noti2);
 }
 
 static Eina_Bool
-_notification_level_windows_create(E_Test_Case *tc)
+_tc_pre_run(E_TC *tc)
 {
-   if (!_tc_normal_win)
-     {
-        Evas_Object *bg;
+   Eina_Bool res;
+   E_TC_Data *data = NULL;
 
-        _tc_normal_win = E_NEW(E_TC_Win, 1);
-        EINA_SAFETY_ON_NULL_GOTO(_tc_normal_win, create_fail);
+   data = E_NEW(E_TC_Data, 1);
+   EINA_SAFETY_ON_NULL_RETURN_VAL(data, EINA_FALSE);
+   tc->data = data;
 
-        _tc_normal_win->obj = elm_win_add(NULL, "_tc_normal_win", ELM_WIN_BASIC);
-        _tc_normal_win->win = elm_win_xwindow_get(_tc_normal_win->obj);
-        elm_win_title_set(_tc_normal_win->obj, "_tc_normal_win");
-        elm_win_autodel_set(_tc_normal_win->obj, EINA_FALSE);
+   data->tw_normal = e_tc_win_add(NULL, ELM_WIN_BASIC,
+                                      EINA_FALSE, "tw_normal",
+                                      0, 0, TW_W, TW_H,
+                                      200);
+   EINA_SAFETY_ON_NULL_GOTO(data->tw_normal, cleanup);
 
-        bg = elm_bg_add(_tc_normal_win->obj);
-        evas_object_size_hint_weight_set(bg, EVAS_HINT_EXPAND, EVAS_HINT_EXPAND);
-        elm_win_resize_object_add(_tc_normal_win->obj, bg);
-        elm_bg_color_set(bg, 0xff, 0, 0);
-        evas_object_show(bg);
-     }
+   data->tw_noti1 = e_tc_win_add(NULL, ELM_WIN_BASIC,
+                                     EINA_FALSE, "tw_noti1",
+                                     0, 0, TW_W, TW_H,
+                                     200);
+   EINA_SAFETY_ON_NULL_GOTO(data->tw_noti1, cleanup);
 
-   if (!_tc_noti_win1)
-     {
-        Evas_Object *bg;
+   data->tw_noti2 = e_tc_win_add(NULL, ELM_WIN_BASIC,
+                                     EINA_FALSE, "tw_noti2",
+                                     0, 0, TW_W, TW_H,
+                                     200);
+   EINA_SAFETY_ON_NULL_GOTO(data->tw_noti2, cleanup);
 
-        _tc_noti_win1 = E_NEW(E_TC_Win, 1);
-        EINA_SAFETY_ON_NULL_GOTO(_tc_noti_win1, create_fail);
+   res = e_test_runner_req_win_register(tc->runner, data->tw_normal);
+   EINA_SAFETY_ON_FALSE_GOTO(res, cleanup);
 
-        _tc_noti_win1->obj = elm_win_add(NULL, "_tc_noti_win1", ELM_WIN_NOTIFICATION);
-        _tc_noti_win1->win = elm_win_xwindow_get(_tc_noti_win1->obj);
-        elm_win_title_set(_tc_noti_win1->obj, "_tc_noti_win1");
-        elm_win_autodel_set(_tc_noti_win1->obj, EINA_FALSE);
+   e_tc_win_geom_update(data->tw_normal);
+   e_tc_win_geom_update(data->tw_noti1);
+   e_tc_win_geom_update(data->tw_noti2);
 
-        bg = elm_bg_add(_tc_noti_win1->obj);
-        evas_object_size_hint_weight_set(bg, EVAS_HINT_EXPAND, EVAS_HINT_EXPAND);
-        elm_win_resize_object_add(_tc_noti_win1->obj, bg);
-        elm_bg_color_set(bg, 0, 0, 0xff);
-        evas_object_show(bg);
-     }
+   e_tc_win_show(data->tw_normal);
+   e_tc_win_show(data->tw_noti1);
+   e_tc_win_show(data->tw_noti2);
 
-   if (!_tc_noti_win2)
-     {
-        Evas_Object *bg;
-
-        _tc_noti_win2 = E_NEW(E_TC_Win, 1);
-        EINA_SAFETY_ON_NULL_GOTO(_tc_noti_win2, create_fail);
-
-        _tc_noti_win2->obj = elm_win_add(NULL, "_tc_noti_win2", ELM_WIN_NOTIFICATION);
-        _tc_noti_win2->win = elm_win_xwindow_get(_tc_noti_win2->obj);
-        elm_win_title_set(_tc_noti_win2->obj, "_tc_noti_win2");
-        elm_win_autodel_set(_tc_noti_win2->obj, EINA_FALSE);
-
-        bg = elm_bg_add(_tc_noti_win2->obj);
-        evas_object_size_hint_weight_set(bg, EVAS_HINT_EXPAND, EVAS_HINT_EXPAND);
-        elm_win_resize_object_add(_tc_noti_win2->obj, bg);
-        elm_bg_color_set(bg, 0, 0, 0xff);
-        evas_object_show(bg);
-     }
+   res = e_test_runner_ev_wait(tc->runner, E_TC_EVENT_TYPE_VIS_ON);
+   EINA_SAFETY_ON_FALSE_GOTO(res, cleanup);
 
    return EINA_TRUE;
 
-create_fail:
-   _notification_level_windows_destroy(tc);
+cleanup:
+   _tc_post_run(tc);
+   _tc_shutdown(tc);
 
    return EINA_FALSE;
 }
 
-static void
-_notification_level_tc_finish(E_Test_Case *tc)
-{
-   _notification_level_windows_destroy(tc);
-
-   registered = EINA_FALSE;
-}
-
 static Eina_Bool
-_notification_level_tc_prepare(E_Test_Case *tc)
+_tc_noti_level_set(E_TC_Win *tw, efl_util_notification_level_e level)
 {
-   if (!_notification_level_windows_create(tc)) return EINA_FALSE;
+   int ret;
 
-   registered = EINA_FALSE;
+   ret = efl_util_set_notification_window_level(tw->elm_win, level);
+   EINA_SAFETY_ON_FALSE_RETURN_VAL(ret == EFL_UTIL_ERROR_NONE, EINA_FALSE);
 
    return EINA_TRUE;
 }
 
 static Eina_Bool
-_notification_level_check_stack(E_Test_Case *tc,
-                                E_TC_Win *bottom,
-                                E_TC_Win *middle,
-                                E_TC_Win *top)
+_tc_noti_level_check(E_TC_Win *tw, efl_util_notification_level_e level)
 {
-   E_TC_Data tc_data = {0,};
-   E_TC_Client *client = NULL;
-   Eina_List *l;
-   int t_layer = 0, m_layer = 0, b_layer = 0;
+   efl_util_notification_level_e value = -1;
+   int ret;
 
-   e_test_case_util_get_clients(&tc_data);
+   ret = efl_util_get_notification_window_level(tw->elm_win, &value);
+   EINA_SAFETY_ON_FALSE_RETURN_VAL(ret == EFL_UTIL_ERROR_NONE, EINA_FALSE);
+   EINA_SAFETY_ON_FALSE_RETURN_VAL(value == level, EINA_FALSE);
 
-   EINA_LIST_FOREACH(tc_data.clients, l, client)
+   return EINA_TRUE;
+}
+
+static Eina_Bool
+_tc_check_stack(E_TC *tc, E_TC_Win *bottom, E_TC_Win *middle, E_TC_Win *top)
+{
+   Eina_List *list = NULL, *l;
+   int b_layer = 0, m_layer = 0, t_layer = 0;
+   E_TC_Win *tw;
+
+   list = e_test_runner_req_win_info_list_get(tc->runner);
+   EINA_SAFETY_ON_NULL_GOTO(list, failed);
+
+   EINA_LIST_FOREACH(list, l, tw)
      {
-        if (top->win == client->win)
+        if (top->elm_win == tw->elm_win)
         {
-           t_layer = client->layer;
+           t_layer = tw->layer;
            continue;
         }
-        else if (middle->win == client->win)
+        else if (middle->elm_win == tw->elm_win)
         {
-           m_layer = client->layer;
+           m_layer = tw->layer;
            continue;
         }
-        else if (bottom->win == client->win)
+        else if (bottom->elm_win == tw->elm_win)
         {
-           b_layer = client->layer;
+           b_layer = tw->layer;
            continue;
         }
      }
 
-   if (b_layer < m_layer && m_layer < t_layer)
-      return EINA_TRUE;
+   EINA_SAFETY_ON_FALSE_GOTO(b_layer <= m_layer, failed);
+   EINA_SAFETY_ON_FALSE_GOTO(m_layer <= t_layer, failed);
 
+   E_FREE_LIST(list, e_tc_win_del);
+   return EINA_TRUE;
+
+failed:
+   E_FREE_LIST(list, e_tc_win_del);
    return EINA_FALSE;
 }
 
 Eina_Bool
-test_case_0120_notification_level(E_Test_Case *tc)
+tc_0300_notification_level_1(E_TC *tc)
 {
-   Eina_Bool passed = EINA_TRUE;
+   Eina_Bool res = EINA_FALSE;
+   E_TC_Data *data;
 
-   passed = passed && e_test_case_inner_do(tc);
+   EINA_SAFETY_ON_NULL_RETURN_VAL(tc, EINA_FALSE);
 
-   return passed;
+   res = _tc_pre_run(tc);
+   EINA_SAFETY_ON_FALSE_GOTO(res, cleanup);
+   data = tc->data;
+
+   res = _tc_noti_level_set(data->tw_noti1, EFL_UTIL_NOTIFICATION_LEVEL_1);
+   EINA_SAFETY_ON_FALSE_GOTO(res, cleanup);
+
+   res = _tc_noti_level_check(data->tw_noti1, EFL_UTIL_NOTIFICATION_LEVEL_1);
+   EINA_SAFETY_ON_FALSE_GOTO(res, cleanup);
+
+   res = _tc_check_stack(tc, data->tw_normal, data->tw_noti2, data->tw_noti1);
+   EINA_SAFETY_ON_FALSE_GOTO(res, cleanup);
+
+cleanup:
+   _tc_post_run(tc);
+   _tc_shutdown(tc);
+
+   return res;
 }
 
 Eina_Bool
-test_case_0121_notification_level_1(E_Test_Case *tc)
+tc_0301_notification_level_2(E_TC *tc)
 {
-   efl_util_notification_level_e level = -1;
-   int ret;
-   Eina_Bool result = EINA_FALSE;
+   Eina_Bool res = EINA_FALSE;
+   E_TC_Data *data;
 
-   EINA_SAFETY_ON_NULL_GOTO(tc, test_shutdown);
+   EINA_SAFETY_ON_NULL_RETURN_VAL(tc, EINA_FALSE);
 
-   if (!_notification_level_tc_prepare(tc)) goto test_shutdown;
+   res = _tc_pre_run(tc);
+   EINA_SAFETY_ON_FALSE_GOTO(res, cleanup);
+   data = tc->data;
 
-   ret = efl_util_set_notification_window_level(_tc_noti_win1->obj,
-                                                EFL_UTIL_NOTIFICATION_LEVEL_1);
-   EINA_SAFETY_ON_FALSE_GOTO(ret == EFL_UTIL_ERROR_NONE, test_shutdown);
+   res = _tc_noti_level_set(data->tw_noti1, EFL_UTIL_NOTIFICATION_LEVEL_2);
+   EINA_SAFETY_ON_FALSE_GOTO(res, cleanup);
 
-   ret = efl_util_get_notification_window_level(_tc_noti_win1->obj, &level);
-   EINA_SAFETY_ON_FALSE_GOTO(ret == EFL_UTIL_ERROR_NONE, test_shutdown);
-   EINA_SAFETY_ON_FALSE_GOTO(level == EFL_UTIL_NOTIFICATION_LEVEL_1, test_shutdown);
+   res = _tc_noti_level_check(data->tw_noti1, EFL_UTIL_NOTIFICATION_LEVEL_2);
+   EINA_SAFETY_ON_FALSE_GOTO(res, cleanup);
 
-   if (!_notification_level_windows_show(tc)) goto test_shutdown;
+   res = _tc_check_stack(tc, data->tw_normal, data->tw_noti2, data->tw_noti1);
+   EINA_SAFETY_ON_FALSE_GOTO(res, cleanup);
 
-   result = _notification_level_check_stack (tc, _tc_normal_win, _tc_noti_win2, _tc_noti_win1);
-   EINA_SAFETY_ON_FALSE_GOTO(result, test_shutdown);
+cleanup:
+   _tc_post_run(tc);
+   _tc_shutdown(tc);
 
-test_shutdown:
-   _notification_level_windows_hide(tc);
-   _notification_level_tc_finish(tc);
-
-   return result;
+   return res;
 }
 
 Eina_Bool
-test_case_0122_notification_level_2(E_Test_Case *tc)
+tc_0302_notification_level_3(E_TC *tc)
 {
-   efl_util_notification_level_e level = -1;
-   int ret;
-   Eina_Bool result = EINA_FALSE;
+   Eina_Bool res = EINA_FALSE;
+   E_TC_Data *data;
 
-   EINA_SAFETY_ON_NULL_GOTO(tc, test_shutdown);
+   EINA_SAFETY_ON_NULL_RETURN_VAL(tc, EINA_FALSE);
 
-   if (!_notification_level_tc_prepare(tc)) goto test_shutdown;
+   res = _tc_pre_run(tc);
+   EINA_SAFETY_ON_FALSE_GOTO(res, cleanup);
+   data = tc->data;
 
-   ret = efl_util_set_notification_window_level(_tc_noti_win1->obj,
-                                                EFL_UTIL_NOTIFICATION_LEVEL_2);
-   EINA_SAFETY_ON_FALSE_GOTO(ret == EFL_UTIL_ERROR_NONE, test_shutdown);
+   res = _tc_noti_level_set(data->tw_noti1, EFL_UTIL_NOTIFICATION_LEVEL_3);
+   EINA_SAFETY_ON_FALSE_GOTO(res, cleanup);
 
-   ret = efl_util_get_notification_window_level(_tc_noti_win1->obj, &level);
-   EINA_SAFETY_ON_FALSE_GOTO(ret == EFL_UTIL_ERROR_NONE, test_shutdown);
-   EINA_SAFETY_ON_FALSE_GOTO(level == EFL_UTIL_NOTIFICATION_LEVEL_2, test_shutdown);
+   res = _tc_noti_level_check(data->tw_noti1, EFL_UTIL_NOTIFICATION_LEVEL_3);
+   EINA_SAFETY_ON_FALSE_GOTO(res, cleanup);
 
-   if (!_notification_level_windows_show(tc)) goto test_shutdown;
+   res = _tc_check_stack(tc, data->tw_normal, data->tw_noti2, data->tw_noti1);
+   EINA_SAFETY_ON_FALSE_GOTO(res, cleanup);
 
-   result = _notification_level_check_stack (tc, _tc_normal_win, _tc_noti_win2, _tc_noti_win1);
-   EINA_SAFETY_ON_FALSE_GOTO(result, test_shutdown);
+cleanup:
+   _tc_post_run(tc);
+   _tc_shutdown(tc);
 
-test_shutdown:
-   _notification_level_windows_hide(tc);
-   _notification_level_tc_finish(tc);
-
-   return result;
+   return res;
 }
 
 Eina_Bool
-test_case_0123_notification_level_3(E_Test_Case *tc)
+tc_0303_notification_level_change(E_TC *tc)
 {
-   efl_util_notification_level_e level = -1;
-   int ret;
-   Eina_Bool result = EINA_FALSE;
+   Eina_Bool res = EINA_FALSE;
+   E_TC_Data *data;
 
-   EINA_SAFETY_ON_NULL_GOTO(tc, test_shutdown);
+   EINA_SAFETY_ON_NULL_RETURN_VAL(tc, EINA_FALSE);
 
-   if (!_notification_level_tc_prepare(tc)) goto test_shutdown;
+   res = _tc_pre_run(tc);
+   EINA_SAFETY_ON_FALSE_GOTO(res, cleanup);
+   data = tc->data;
 
-   ret = efl_util_set_notification_window_level(_tc_noti_win1->obj,
-                                                EFL_UTIL_NOTIFICATION_LEVEL_3);
-   EINA_SAFETY_ON_FALSE_GOTO(ret == EFL_UTIL_ERROR_NONE, test_shutdown);
+   res = _tc_noti_level_set(data->tw_noti1, EFL_UTIL_NOTIFICATION_LEVEL_3);
+   EINA_SAFETY_ON_FALSE_GOTO(res, cleanup);
 
-   ret = efl_util_get_notification_window_level(_tc_noti_win1->obj, &level);
-   EINA_SAFETY_ON_FALSE_GOTO(ret == EFL_UTIL_ERROR_NONE, test_shutdown);
-   EINA_SAFETY_ON_FALSE_GOTO(level == EFL_UTIL_NOTIFICATION_LEVEL_3, test_shutdown);
+   res = _tc_noti_level_set(data->tw_noti2, EFL_UTIL_NOTIFICATION_LEVEL_2);
+   EINA_SAFETY_ON_FALSE_GOTO(res, cleanup);
 
-   if (!_notification_level_windows_show(tc)) goto test_shutdown;
+   res = _tc_check_stack(tc, data->tw_normal, data->tw_noti2, data->tw_noti1);
+   EINA_SAFETY_ON_FALSE_GOTO(res, cleanup);
 
-   result = _notification_level_check_stack (tc, _tc_normal_win, _tc_noti_win2, _tc_noti_win1);
-   EINA_SAFETY_ON_FALSE_GOTO(result, test_shutdown);
+   res = _tc_noti_level_set(data->tw_noti1, EFL_UTIL_NOTIFICATION_LEVEL_1);
+   EINA_SAFETY_ON_FALSE_GOTO(res, cleanup);
 
-test_shutdown:
-   _notification_level_windows_hide(tc);
-   _notification_level_tc_finish(tc);
+   res = _tc_check_stack(tc, data->tw_normal, data->tw_noti1, data->tw_noti2);
+   EINA_SAFETY_ON_FALSE_GOTO(res, cleanup);
 
-   return result;
+cleanup:
+   _tc_post_run(tc);
+   _tc_shutdown(tc);
+
+   return res;
 }
-
-Eina_Bool
-test_case_0124_notification_level_change(E_Test_Case *tc)
-{
-   int ret;
-   Eina_Bool result = EINA_FALSE;
-
-   EINA_SAFETY_ON_NULL_GOTO(tc, test_shutdown);
-
-   if (!_notification_level_tc_prepare(tc)) goto test_shutdown;
-
-   ret = efl_util_set_notification_window_level(_tc_noti_win2->obj,
-                                                EFL_UTIL_NOTIFICATION_LEVEL_2);
-   EINA_SAFETY_ON_FALSE_GOTO(ret == EFL_UTIL_ERROR_NONE, test_shutdown);
-
-   ret = efl_util_set_notification_window_level(_tc_noti_win1->obj,
-                                                EFL_UTIL_NOTIFICATION_LEVEL_3);
-   EINA_SAFETY_ON_FALSE_GOTO(ret == EFL_UTIL_ERROR_NONE, test_shutdown);
-
-   if (!_notification_level_windows_show(tc)) goto test_shutdown;
-
-   result = _notification_level_check_stack (tc, _tc_normal_win, _tc_noti_win2, _tc_noti_win1);
-   EINA_SAFETY_ON_FALSE_GOTO(result, test_shutdown);
-
-   ret = efl_util_set_notification_window_level(_tc_noti_win1->obj,
-                                                EFL_UTIL_NOTIFICATION_LEVEL_1);
-   EINA_SAFETY_ON_FALSE_GOTO(ret == EFL_UTIL_ERROR_NONE, test_shutdown);
-
-   result = _notification_level_check_stack (tc, _tc_normal_win, _tc_noti_win1, _tc_noti_win2);
-   EINA_SAFETY_ON_FALSE_GOTO(result, test_shutdown);
-
-test_shutdown:
-   _notification_level_windows_hide(tc);
-   _notification_level_tc_finish(tc);
-
-   return result;
-}
-#endif

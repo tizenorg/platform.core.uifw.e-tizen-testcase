@@ -144,4 +144,9 @@ Eina_Bool  tc_0202_transient_for_lower(E_TC *tc);
 Eina_Bool  tc_0203_transient_for_stack_above(E_TC *tc);
 Eina_Bool  tc_0204_transient_for_stack_below(E_TC *tc);
 
+Eina_Bool  tc_0300_notification_level_1(E_TC *tc);
+Eina_Bool  tc_0301_notification_level_2(E_TC *tc);
+Eina_Bool  tc_0302_notification_level_3(E_TC *tc);
+Eina_Bool  tc_0303_notification_level_change(E_TC *tc);
+
 #endif

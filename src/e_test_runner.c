@@ -499,6 +499,10 @@ _e_test_runner_init(E_Test_Runner *runner)
    TC_ADD( 203, "Transient for: Stack above", T_FUNC( 203, transient_for_stack_above), 1);
    TC_ADD( 204, "Transient for: Stack below", T_FUNC( 204, transient_for_stack_below), 1);
    /* [0300 - 0399] notification */
+   TC_ADD( 300, "Noti Level 1",               T_FUNC( 300, notification_level_1     ), 1);
+   TC_ADD( 301, "Noti Level 2",               T_FUNC( 301, notification_level_2     ), 1);
+   TC_ADD( 302, "Noti Level 3",               T_FUNC( 302, notification_level_3     ), 1);
+   TC_ADD( 303, "Noti Level Change",          T_FUNC( 303, notification_level_change), 1);
    /* TODO */
 #undef T_FUNC
 }
