@@ -2,7 +2,7 @@
 %bcond_with x
 
 Name: e-tizen-testcase
-Version: 0.0.1
+Version: 0.0.2
 Release: 1
 Summary: The test case runner for enlightenment
 URL: http://www.enlightenment.org
