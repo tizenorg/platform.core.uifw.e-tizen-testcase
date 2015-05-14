@@ -130,8 +130,9 @@ _cb_signal_vis_changed(void *data,
    EINA_SAFETY_ON_FALSE_GOTO(res, finish);
 
    /* TODO */
-   if (((E_TC_EVENT_TYPE_VIS_ON  == runner->ev.expect) && ( vis)) ||
-       ((E_TC_EVENT_TYPE_VIS_OFF == runner->ev.expect) && (!vis)))
+   if (((E_TC_EVENT_TYPE_VIS_ON  == runner->ev.expect) && (vis)) ||
+       ((E_TC_EVENT_TYPE_VIS_OFF == runner->ev.expect) && (!vis)) ||
+       (E_TC_EVENT_TYPE_VIS_CHANGED == runner->ev.expect))
      {
         runner->ev.response = runner->ev.expect;
         elm_exit();
@@ -253,9 +254,10 @@ e_test_runner_req_win_info_list_get(E_Test_Runner *runner)
 {
    Eldbus_Pending *p;
    Eina_List *list = NULL;
+   list = eina_list_append(list, NULL);
 
    p = eldbus_proxy_call(runner->dbus.proxy,
-                         "GetClients",
+                         "GetWindowInfo",
                          _cb_method_win_info_list_get,
                          list,
                          -1,
@@ -281,6 +283,7 @@ e_test_runner_ev_wait(E_Test_Runner *runner,
      {
       case E_TC_EVENT_TYPE_VIS_ON:
       case E_TC_EVENT_TYPE_VIS_OFF:
+      case E_TC_EVENT_TYPE_VIS_CHANGED:
          sh = eldbus_proxy_signal_handler_add(runner->dbus.proxy,
                                               "VisibilityChanged",
                                               _cb_signal_vis_changed,

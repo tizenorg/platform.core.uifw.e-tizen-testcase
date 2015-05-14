@@ -49,7 +49,7 @@ _tc_pre_run(E_TC *tc)
    e_tc_win_geom_update(tc->data->tw_child);
    e_tc_win_show(tc->data->tw_child);
 
-   res = e_test_runner_ev_wait(tc->runner, E_TC_EVENT_TYPE_VIS_ON);
+   res = e_test_runner_ev_wait(tc->runner, E_TC_EVENT_TYPE_VIS_CHANGED);
    EINA_SAFETY_ON_FALSE_GOTO(res, cleanup);
 
    return EINA_TRUE;
@@ -144,7 +144,7 @@ tc_0201_transient_for_raise(E_TC *tc)
    res = _tc_pre_run(tc);
    EINA_SAFETY_ON_FALSE_GOTO(res, cleanup);
 
-   tw = tc->data->tw;
+   tw = tc->data->tw_parent;
 
    e_test_runner_req_win_stack_set(tc->runner, tw, NULL, EINA_TRUE);
 
@@ -182,7 +182,7 @@ tc_0202_transient_for_lower(E_TC *tc)
    res = _tc_pre_run(tc);
    EINA_SAFETY_ON_FALSE_GOTO(res, cleanup);
 
-   tw = tc->data->tw;
+   tw = tc->data->tw_parent;
 
    e_test_runner_req_win_stack_set(tc->runner, tw, NULL, EINA_FALSE);
 
