@@ -227,6 +227,27 @@ e_test_runner_req_win_deregister(E_Test_Runner *runner,
    return allowed;
 }
 
+Eina_Bool
+e_test_runner_req_win_stack_set(E_Test_Runner *runner,
+                                E_TC_Win *tw,
+                                E_TC_Win *sibling,
+                                Eina_Bool above)
+{
+   Eldbus_Pending *p;
+   p = eldbus_proxy_call(runner->dbus.proxy,
+                         "SetWindowStack",
+                         NULL,
+                         NULL,
+                         -1,
+                         "uui",
+                         tw->native_win,
+                         sibling? sibling->native_win : 0,
+                         above);
+   EINA_SAFETY_ON_TRUE_RETURN_VAL(p != NULL, EINA_FALSE);
+
+   return EINA_TRUE;
+}
+
 Eina_List *
 e_test_runner_req_win_info_list_get(E_Test_Runner *runner)
 {
@@ -343,7 +364,7 @@ e_tc_win_add(E_TC_Win *parent,
    EINA_SAFETY_ON_NULL_RETURN_VAL(tw, NULL);
 
    tw->elm_win = elm_win;
-   tw->native_win = elm_win_xwindow_get(elm_win); // TODO: wayland
+   tw->native_win = elm_win_window_id_get(elm_win);
    tw->name = eina_stringshare_add(name);
    tw->x = x;
    tw->y = y;
@@ -351,6 +372,10 @@ e_tc_win_add(E_TC_Win *parent,
    tw->h = h;
    tw->layer = layer;
    tw->alpha = alpha;
+
+#if HAVE_WAYLAND
+   tw->native_win = ((uint64_t)tw->native_win << 32) + getpid();
+#endif
 
    return tw;
 
@@ -418,34 +443,6 @@ void
 e_tc_win_hide(E_TC_Win *tw)
 {
    evas_object_hide(tw->elm_win);
-}
-
-void
-e_tc_win_stack_change(E_TC_Win *tw, E_TC_Win *sibling, Eina_Bool above)
-{
-   /* TODO */
-   if (sibling)
-     {
-        if (above)
-          {
-             ; // stack above: window is placed above sibling window.
-          }
-        else
-          {
-             ; // stack below: window is placed below sibling window.
-          }
-     }
-   else
-     {
-        if (above)
-          {
-             ; // raise: window is placed at the top of stack.
-          }
-        else
-          {
-             ; // lower: window is placed at the bottom of stack.
-          }
-     }
 }
 
 static E_TC *

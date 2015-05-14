@@ -1,6 +1,7 @@
 #ifndef E_TC_MAIN_H
 #define E_TC_MAIN_H
 
+#include "config.h"
 #include <Eldbus.h>
 #include <Elementary.h>
 
@@ -117,6 +118,7 @@ struct _E_TC
 Eina_Bool  e_test_runner_req_win_register(E_Test_Runner *runner, E_TC_Win *tw);
 Eina_Bool  e_test_runner_req_win_deregister(E_Test_Runner *runner, E_TC_Win *tw);
 Eina_List *e_test_runner_req_win_info_list_get(E_Test_Runner *runner);
+Eina_Bool  e_test_runner_req_win_stack_set(E_Test_Runner *runner, E_TC_Win *tw, E_TC_Win *sibling, Eina_Bool above);
 Eina_Bool  e_test_runner_ev_wait(E_Test_Runner *runner, E_TC_Event_Type ev);
 
 E_TC_Win  *e_tc_win_add(E_TC_Win *parent, Elm_Win_Type type, Eina_Bool alpha, const char *name, int x, int y, int w, int h, int layer);
@@ -125,7 +127,6 @@ void       e_tc_win_del(E_TC_Win *tw);
 void       e_tc_win_geom_update(E_TC_Win *tw);
 void       e_tc_win_show(E_TC_Win *tw);
 void       e_tc_win_hide(E_TC_Win *tw);
-void       e_tc_win_stack_change(E_TC_Win *tw, E_TC_Win *sibling, Eina_Bool above);
 
 /* test cases */
 Eina_Bool  tc_0000_base_pass(E_TC *tc);

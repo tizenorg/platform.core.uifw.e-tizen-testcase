@@ -1,3 +1,4 @@
+%bcond_with wayland
 %bcond_with x
 
 Name: e-tizen-testcase
@@ -13,10 +14,6 @@ BuildRequires: pkgconfig(eldbus)
 BuildRequires: pkgconfig(capi-ui-efl-util)
 BuildRequires:  gettext
 
-%if !%{with x}
-ExclusiveArch:
-%endif
-
 %description
 This package is a test case runner for enlightenment.
 
@@ -30,7 +27,13 @@ export CFLAGS+=" -Wall -g -fPIC -rdynamic ${GC_SECTIONS_FLAGS}"
 export LDFLAGS+=" -Wl,--hash-style=both -Wl,--as-needed -Wl,--rpath=/usr/lib"
 
 %autogen
-%configure --prefix=/usr
+%configure --prefix=/usr \
+%if %{with x}
+      --with-x11
+%endif
+%if %{with wayland}
+      --with-wayland
+%endif
 make %{?_smp_mflags}
 
 %install

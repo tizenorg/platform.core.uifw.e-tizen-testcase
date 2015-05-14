@@ -146,7 +146,7 @@ tc_0201_transient_for_raise(E_TC *tc)
 
    tw = tc->data->tw;
 
-   e_tc_win_stack_change(tw, NULL, EINA_TRUE);
+   e_test_runner_req_win_stack_set(tc->runner, tw, NULL, EINA_TRUE);
 
    res = e_test_runner_ev_wait(tc->runner, E_TC_EVENT_TYPE_STACK_RAISE);
    EINA_SAFETY_ON_FALSE_GOTO(res, cleanup);
@@ -184,7 +184,7 @@ tc_0202_transient_for_lower(E_TC *tc)
 
    tw = tc->data->tw;
 
-   e_tc_win_stack_change(tw, NULL, EINA_FALSE);
+   e_test_runner_req_win_stack_set(tc->runner, tw, NULL, EINA_FALSE);
 
    res = e_test_runner_ev_wait(tc->runner, E_TC_EVENT_TYPE_STACK_LOWER);
    EINA_SAFETY_ON_FALSE_GOTO(res, cleanup);
@@ -225,7 +225,7 @@ tc_0203_transient_for_stack_above(E_TC *tc)
    tw_parent = tc->data->tw_parent;
    tw_child = tc->data->tw_child;
 
-   e_tc_win_stack_change(tw_parent, tw, EINA_TRUE);
+   e_test_runner_req_win_stack_set(tc->runner, tw_parent, tw, EINA_TRUE);
 
    res = e_test_runner_ev_wait(tc->runner, E_TC_EVENT_TYPE_STACK_ABOVE);
    EINA_SAFETY_ON_FALSE_GOTO(res, cleanup);
@@ -278,7 +278,7 @@ tc_0204_transient_for_stack_below(E_TC *tc)
    tw_parent = tc->data->tw_parent;
    tw_child = tc->data->tw_child;
 
-   e_tc_win_stack_change(tw_parent, tw, EINA_FALSE);
+   e_test_runner_req_win_stack_set(tc->runner, tw_parent, tw, EINA_FALSE);
 
    res = e_test_runner_ev_wait(tc->runner, E_TC_EVENT_TYPE_STACK_BELOW);
    EINA_SAFETY_ON_FALSE_GOTO(res, cleanup);
