@@ -2,6 +2,79 @@
 
 int _log_dom = -1;
 
+#if HAVE_WAYLAND
+static void
+_e_test_runner_cb_resource_id(void *data,
+                              struct tizen_resource *tizen_resource EINA_UNUSED,
+                              uint32_t id)
+{
+   Ecore_Window *res_id = data;
+
+   *res_id = id;
+
+   elm_exit();
+}
+
+static const struct tizen_resource_listener _ecore_tizen_resource_listener =
+{
+   _e_test_runner_cb_resource_id,
+};
+#endif
+
+static Ecore_Window
+_e_test_runner_window_id_get(Evas_Object *elm_win)
+{
+#if HAVE_WAYLAND
+   Ecore_Wl_Window *wlwin;
+   struct wl_surface *surf;
+   Ecore_Window id = 0;
+
+   Eina_Inlist *globals;
+   Ecore_Wl_Global *global;
+   struct wl_registry *registry;
+
+   struct tizen_surface *tizen_surface = NULL;
+   struct tizen_resource *tizen_resource = NULL;
+
+   wlwin = elm_win_wl_window_get(elm_win);
+   if (!wlwin) return 0;
+
+   surf = ecore_wl_window_surface_get(wlwin);
+   if (!surf) return 0;
+
+   registry = ecore_wl_registry_get();
+   globals = ecore_wl_globals_get();
+
+   if (!registry || !globals) return 0;
+
+   EINA_INLIST_FOREACH(globals, global)
+     {
+        if (!strcmp(global->interface, "tizen_surface"))
+          {
+             tizen_surface =
+                wl_registry_bind(registry, global->id,
+                                 &tizen_surface_interface, 1);
+             break;
+          }
+     }
+
+   if (!tizen_surface) return 0;
+
+   tizen_resource = tizen_surface_get_tizen_resource(tizen_surface, surf);
+   if (!tizen_resource) return 0;
+   tizen_resource_add_listener(tizen_resource,
+                               &_ecore_tizen_resource_listener, &id);
+
+   elm_run();
+
+   if (tizen_resource) tizen_resource_destroy(tizen_resource);
+   if (tizen_surface) tizen_surface_destroy(tizen_surface);
+
+   return id;
+#endif
+   return elm_win_window_id_get(elm_win);
+}
+
 static void
 _cb_method_win_info_list_get(void *data,
                              const Eldbus_Message *msg,
@@ -18,8 +91,6 @@ _cb_method_win_info_list_get(void *data,
 
    res = eldbus_message_arguments_get(msg, "ua(usiiiiibb)", &target_win, &array);
    EINA_SAFETY_ON_FALSE_GOTO(res, finish);
-
-   list = eina_list_free(list);
 
    while (eldbus_message_iter_get_and_next(array, 'r', &ec))
      {
@@ -265,6 +336,7 @@ e_test_runner_req_win_info_list_get(E_Test_Runner *runner)
    EINA_SAFETY_ON_NULL_RETURN_VAL(p, NULL);
 
    elm_run();
+   list = eina_list_remove(list, NULL);
 
    return list;
 }
@@ -367,7 +439,7 @@ e_tc_win_add(E_TC_Win *parent,
    EINA_SAFETY_ON_NULL_RETURN_VAL(tw, NULL);
 
    tw->elm_win = elm_win;
-   tw->native_win = elm_win_window_id_get(elm_win);
+   tw->native_win = _e_test_runner_window_id_get(elm_win);
    tw->name = eina_stringshare_add(name);
    tw->x = x;
    tw->y = y;
@@ -375,10 +447,6 @@ e_tc_win_add(E_TC_Win *parent,
    tw->h = h;
    tw->layer = layer;
    tw->alpha = alpha;
-
-#if HAVE_WAYLAND
-   tw->native_win = ((uint64_t)tw->native_win << 32) + getpid();
-#endif
 
    return tw;
 

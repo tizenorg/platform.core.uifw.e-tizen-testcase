@@ -12,7 +12,11 @@ License: BSD-2-Clause
 BuildRequires: pkgconfig(enlightenment)
 BuildRequires: pkgconfig(eldbus)
 BuildRequires: pkgconfig(capi-ui-efl-util)
-BuildRequires:  gettext
+BuildRequires: gettext
+%if %{with wayland}
+BuildRequires: pkgconfig(tizen-extension-client)
+%endif
+
 
 %description
 This package is a test case runner for enlightenment.

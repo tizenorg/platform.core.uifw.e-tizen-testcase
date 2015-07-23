@@ -5,6 +5,12 @@
 #include <Eldbus.h>
 #include <Elementary.h>
 
+#if HAVE_WAYLAND
+#include <Ecore_Wayland.h>
+#include <wayland-client.h>
+#include <tizen-extension-client-protocol.h>
+#endif
+
 extern int _log_dom;
 
 #ifdef ERR

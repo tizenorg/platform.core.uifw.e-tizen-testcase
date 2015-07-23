@@ -49,7 +49,8 @@ requirements="\
 if test "x$WITH_WAYLAND" = x"yes"; then
 requirements="$requirements \
               wayland-client \
-              ecore-wayland"
+              ecore-wayland \
+              tizen-extension-client"
 fi
 
 PKG_CHECK_MODULES(E_TEST_RUNNER, [${requirements}])
