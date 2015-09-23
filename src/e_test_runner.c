@@ -3,6 +3,9 @@
 int _log_dom = -1;
 
 #if HAVE_WAYLAND
+struct tizen_policy *tizen_policy = NULL;
+struct tizen_surface *tizen_surface = NULL;
+
 static void
 _e_test_runner_cb_resource_id(void *data,
                               struct tizen_resource *tizen_resource EINA_UNUSED,
@@ -15,7 +18,7 @@ _e_test_runner_cb_resource_id(void *data,
    elm_exit();
 }
 
-static const struct tizen_resource_listener _ecore_tizen_resource_listener =
+static const struct tizen_resource_listener _tizen_resource_listener =
 {
    _e_test_runner_cb_resource_id,
 };
@@ -33,7 +36,6 @@ _e_test_runner_window_id_get(Evas_Object *elm_win)
    Ecore_Wl_Global *global;
    struct wl_registry *registry;
 
-   struct tizen_surface *tizen_surface = NULL;
    struct tizen_resource *tizen_resource = NULL;
 
    wlwin = elm_win_wl_window_get(elm_win);
@@ -42,33 +44,35 @@ _e_test_runner_window_id_get(Evas_Object *elm_win)
    surf = ecore_wl_window_surface_get(wlwin);
    if (!surf) return 0;
 
-   registry = ecore_wl_registry_get();
-   globals = ecore_wl_globals_get();
-
-   if (!registry || !globals) return 0;
-
-   EINA_INLIST_FOREACH(globals, global)
+   if (!tizen_surface)
      {
-        if (!strcmp(global->interface, "tizen_surface"))
-          {
-             tizen_surface =
-                wl_registry_bind(registry, global->id,
-                                 &tizen_surface_interface, 1);
-             break;
-          }
-     }
+        registry = ecore_wl_registry_get();
+        globals = ecore_wl_globals_get();
 
-   if (!tizen_surface) return 0;
+        if (!registry || !globals) return 0;
+
+        EINA_INLIST_FOREACH(globals, global)
+          {
+             if (!strcmp(global->interface, "tizen_surface"))
+               {
+                  tizen_surface =
+                     wl_registry_bind(registry, global->id,
+                                      &tizen_surface_interface, 1);
+                  break;
+               }
+          }
+
+        if (!tizen_surface) return 0;
+     }
 
    tizen_resource = tizen_surface_get_tizen_resource(tizen_surface, surf);
    if (!tizen_resource) return 0;
    tizen_resource_add_listener(tizen_resource,
-                               &_ecore_tizen_resource_listener, &id);
+                               &_tizen_resource_listener, &id);
 
    elm_run();
 
    if (tizen_resource) tizen_resource_destroy(tizen_resource);
-   if (tizen_surface) tizen_surface_destroy(tizen_surface);
 
    return id;
 #endif
@@ -516,6 +520,51 @@ e_tc_win_hide(E_TC_Win *tw)
    evas_object_hide(tw->elm_win);
 }
 
+Eina_Bool
+e_tc_win_transient_for_set(E_TC_Win *tw_child, E_TC_Win *tw_parent, Eina_Bool set)
+{
+#if HAVE_WAYLAND
+   Eina_Inlist *globals;
+   Ecore_Wl_Global *global;
+   struct wl_registry *registry;
+
+   if (!tizen_policy)
+     {
+        registry = ecore_wl_registry_get();
+        globals = ecore_wl_globals_get();
+
+        if (!registry || !globals) return EINA_FALSE;
+
+        EINA_INLIST_FOREACH(globals, global)
+          {
+             if (!strcmp(global->interface, "tizen_policy"))
+               {
+                  tizen_policy =
+                     wl_registry_bind(registry, global->id,
+                                      &tizen_policy_interface, 1);
+               }
+          }
+
+        if (!tizen_policy) return EINA_FALSE;
+     }
+
+   if (set)
+     tizen_policy_set_transient_for(tizen_policy,
+                                    tw_child->native_win,
+                                    tw_parent->native_win);
+   else
+     tizen_policy_unset_transient_for(tizen_policy,
+                                    tw_child->native_win);
+#else
+   if (set)
+     ecore_x_icccm_transient_for_set(tw_child->native_win,
+                                     tw_parent->native_win);
+   else
+     ecore_x_icccm_transient_for_unset(tw_child->native_win);
+#endif
+   return EINA_TRUE;
+}
+
 static E_TC *
 _e_tc_add(unsigned int num,
           const char *name,
@@ -584,6 +633,14 @@ _e_test_runner_shutdown(E_Test_Runner *runner)
      {
         E_FREE(tc);
      }
+
+#if HAVE_WAYLAND
+   if (tizen_surface) tizen_surface_destroy(tizen_surface);
+   if (tizen_policy) tizen_policy_destroy(tizen_policy);
+
+   tizen_surface = NULL;
+   tizen_policy = NULL;
+#endif
 }
 
 static void

@@ -52,6 +52,11 @@ _tc_pre_run(E_TC *tc)
    res = e_test_runner_ev_wait(tc->runner, E_TC_EVENT_TYPE_VIS_CHANGED);
    EINA_SAFETY_ON_FALSE_GOTO(res, cleanup);
 
+   res = e_tc_win_transient_for_set(tc->data->tw_child,
+                                    tc->data->tw_parent,
+                                    EINA_TRUE);
+   EINA_SAFETY_ON_FALSE_GOTO(res, cleanup);
+
    return EINA_TRUE;
 
 cleanup:
@@ -135,18 +140,19 @@ cleanup:
 Eina_Bool
 tc_0201_transient_for_raise(E_TC *tc)
 {
-   E_TC_Win *tw, *tw2;
+   E_TC_Win *tw_parent, *tw_child, *tw;
    Eina_Bool res = EINA_FALSE;
-   Eina_List *list = NULL;
+   Eina_List *list = NULL, *l;
 
    EINA_SAFETY_ON_NULL_RETURN_VAL(tc, EINA_FALSE);
 
    res = _tc_pre_run(tc);
    EINA_SAFETY_ON_FALSE_GOTO(res, cleanup);
 
-   tw = tc->data->tw_parent;
+   tw_parent = tc->data->tw_parent;
+   tw_child = tc->data->tw_child;
 
-   e_test_runner_req_win_stack_set(tc->runner, tw, NULL, EINA_TRUE);
+   e_test_runner_req_win_stack_set(tc->runner, tw_parent, NULL, EINA_TRUE);
 
    res = e_test_runner_ev_wait(tc->runner, E_TC_EVENT_TYPE_STACK_RAISE);
    EINA_SAFETY_ON_FALSE_GOTO(res, cleanup);
@@ -154,9 +160,15 @@ tc_0201_transient_for_raise(E_TC *tc)
    list = e_test_runner_req_win_info_list_get(tc->runner);
    EINA_SAFETY_ON_NULL_GOTO(list, cleanup);
 
-   tw2 = eina_list_nth(list, 0);
-   EINA_SAFETY_ON_NULL_GOTO(tw2, cleanup);
-   EINA_SAFETY_ON_FALSE_GOTO(tw2->native_win == tw->native_win, cleanup);
+   EINA_LIST_FOREACH(list, l, tw)
+     {
+        if (tw->layer > tw_parent->layer) continue;
+
+        break;
+     }
+
+   EINA_SAFETY_ON_NULL_GOTO(tw, cleanup);
+   EINA_SAFETY_ON_FALSE_GOTO(tw->native_win == tw_child->native_win, cleanup);
 
    res = _tc_post_run(tc);
    EINA_SAFETY_ON_FALSE_GOTO(res, cleanup);
@@ -173,18 +185,19 @@ cleanup:
 Eina_Bool
 tc_0202_transient_for_lower(E_TC *tc)
 {
-   E_TC_Win *tw, *tw2;
+   E_TC_Win *tw_parent, *tw_child, *tw;
    Eina_Bool res = EINA_FALSE;
-   Eina_List *list = NULL;
+   Eina_List *list = NULL, *l;
 
    EINA_SAFETY_ON_NULL_RETURN_VAL(tc, EINA_FALSE);
 
    res = _tc_pre_run(tc);
    EINA_SAFETY_ON_FALSE_GOTO(res, cleanup);
 
-   tw = tc->data->tw_parent;
+   tw_parent = tc->data->tw_parent;
+   tw_child = tc->data->tw_child;
 
-   e_test_runner_req_win_stack_set(tc->runner, tw, NULL, EINA_FALSE);
+   e_test_runner_req_win_stack_set(tc->runner, tw_parent, NULL, EINA_FALSE);
 
    res = e_test_runner_ev_wait(tc->runner, E_TC_EVENT_TYPE_STACK_LOWER);
    EINA_SAFETY_ON_FALSE_GOTO(res, cleanup);
@@ -192,9 +205,16 @@ tc_0202_transient_for_lower(E_TC *tc)
    list = e_test_runner_req_win_info_list_get(tc->runner);
    EINA_SAFETY_ON_NULL_GOTO(list, cleanup);
 
-   tw2 = eina_list_last_data_get(list);
-   EINA_SAFETY_ON_NULL_GOTO(tw2, cleanup);
-   EINA_SAFETY_ON_FALSE_GOTO(tw2->native_win == tw->native_win, cleanup);
+   EINA_LIST_REVERSE_FOREACH(list, l, tw)
+     {
+        if (tw->layer < tw_parent->layer) continue;
+        if (tw->native_win == tw_parent->native_win) continue;
+
+        break;
+     }
+
+   EINA_SAFETY_ON_NULL_GOTO(tw, cleanup);
+   EINA_SAFETY_ON_FALSE_GOTO(tw->native_win == tw_child->native_win, cleanup);
 
    res = _tc_post_run(tc);
    EINA_SAFETY_ON_FALSE_GOTO(res, cleanup);
@@ -237,8 +257,8 @@ tc_0203_transient_for_stack_above(E_TC *tc)
      {
         if (tw2->layer > tw->layer) continue;
         if (tw2->layer < tw->layer) break;
-
-        if (tw2->native_win == tw_parent->native_win)
+        if (tw2->native_win == tw_parent->native_win) continue;
+        if (tw2->native_win == tw->native_win)
           {
              if ((tw_above) &&
                  (tw_above->native_win == tw_child->native_win))
@@ -253,6 +273,8 @@ tc_0203_transient_for_stack_above(E_TC *tc)
 
    res = _tc_post_run(tc);
    EINA_SAFETY_ON_FALSE_GOTO(res, cleanup);
+
+   tc->passed = EINA_TRUE;
 
 cleanup:
    _tc_shutdown(tc);
@@ -310,11 +332,12 @@ tc_0204_transient_for_stack_below(E_TC *tc)
 
         tw_above = tw2;
      }
-
    EINA_SAFETY_ON_FALSE_GOTO(res, cleanup);
 
    res = _tc_post_run(tc);
    EINA_SAFETY_ON_FALSE_GOTO(res, cleanup);
+
+   tc->passed = EINA_TRUE;
 
 cleanup:
    _tc_shutdown(tc);

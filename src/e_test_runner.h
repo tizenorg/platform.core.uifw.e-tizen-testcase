@@ -6,9 +6,11 @@
 #include <Elementary.h>
 
 #if HAVE_WAYLAND
-#include <Ecore_Wayland.h>
-#include <wayland-client.h>
-#include <tizen-extension-client-protocol.h>
+ #include <Ecore_Wayland.h>
+ #include <wayland-client.h>
+ #include <tizen-extension-client-protocol.h>
+#else
+ #include <Ecore_X.h>
 #endif
 
 extern int _log_dom;
@@ -134,6 +136,7 @@ void       e_tc_win_del(E_TC_Win *tw);
 void       e_tc_win_geom_update(E_TC_Win *tw);
 void       e_tc_win_show(E_TC_Win *tw);
 void       e_tc_win_hide(E_TC_Win *tw);
+Eina_Bool  e_tc_win_transient_for_set(E_TC_Win *tw_parent, E_TC_Win *tw_child, Eina_Bool set);
 
 /* test cases */
 Eina_Bool  tc_0000_base_pass(E_TC *tc);
