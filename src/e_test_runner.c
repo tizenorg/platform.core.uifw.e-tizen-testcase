@@ -425,7 +425,7 @@ e_tc_win_add(E_TC_Win *parent,
 
    if (parent) p_elm_win = parent->elm_win;
 
-   elm_win = elm_win_add(p_elm_win, name, ELM_WIN_BASIC);
+   elm_win = elm_win_add(p_elm_win, name, type);
    EINA_SAFETY_ON_NULL_GOTO(elm_win, err);
 
    if (alpha) elm_win_alpha_set(elm_win, EINA_TRUE);

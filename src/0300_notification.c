@@ -48,21 +48,21 @@ _tc_pre_run(E_TC *tc)
    tc->data = data;
 
    data->tw_normal = e_tc_win_add(NULL, ELM_WIN_BASIC,
-                                      EINA_FALSE, "tw_normal",
-                                      0, 0, TW_W, TW_H,
-                                      200);
+                                  EINA_FALSE, "tw_normal",
+                                  0, 0, TW_W, TW_H,
+                                  200);
    EINA_SAFETY_ON_NULL_GOTO(data->tw_normal, cleanup);
 
-   data->tw_noti1 = e_tc_win_add(NULL, ELM_WIN_BASIC,
-                                     EINA_FALSE, "tw_noti1",
-                                     0, 0, TW_W, TW_H,
-                                     200);
+   data->tw_noti1 = e_tc_win_add(NULL, ELM_WIN_NOTIFICATION,
+                                 EINA_FALSE, "tw_noti1",
+                                 0, 0, TW_W, TW_H,
+                                 200);
    EINA_SAFETY_ON_NULL_GOTO(data->tw_noti1, cleanup);
 
-   data->tw_noti2 = e_tc_win_add(NULL, ELM_WIN_BASIC,
-                                     EINA_FALSE, "tw_noti2",
-                                     0, 0, TW_W, TW_H,
-                                     200);
+   data->tw_noti2 = e_tc_win_add(NULL, ELM_WIN_NOTIFICATION,
+                                 EINA_FALSE, "tw_noti2",
+                                 0, 0, TW_W, TW_H,
+                                 200);
    EINA_SAFETY_ON_NULL_GOTO(data->tw_noti2, cleanup);
 
    res = e_test_runner_req_win_register(tc->runner, data->tw_normal);
@@ -76,7 +76,7 @@ _tc_pre_run(E_TC *tc)
    e_tc_win_show(data->tw_noti1);
    e_tc_win_show(data->tw_noti2);
 
-   res = e_test_runner_ev_wait(tc->runner, E_TC_EVENT_TYPE_VIS_ON);
+   res = e_test_runner_ev_wait(tc->runner, E_TC_EVENT_TYPE_VIS_CHANGED);
    EINA_SAFETY_ON_FALSE_GOTO(res, cleanup);
 
    return EINA_TRUE;
