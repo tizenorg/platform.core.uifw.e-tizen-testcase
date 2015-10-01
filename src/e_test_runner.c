@@ -1,5 +1,7 @@
 #include "e_test_runner.h"
 
+#define E_TEST_RUNNER_WORK_TIME 0.3
+
 int _log_dom = -1;
 
 #if HAVE_WAYLAND
@@ -247,6 +249,13 @@ finish:
 }
 
 static Eina_Bool
+_cb_work_time_out(void *data EINA_UNUSED)
+{
+   elm_exit();
+   return ECORE_CALLBACK_CANCEL;
+}
+
+static Eina_Bool
 _ev_wait_timeout(void *data)
 {
    E_Test_Runner *runner = data;
@@ -408,6 +417,14 @@ finish:
    runner->ev.response = E_TC_EVENT_TYPE_NONE;
 
    return res;
+}
+
+void
+e_test_runner_work(void)
+{
+   /* give a turn to deal with deferred job for E_TEST_RUNNER_WORK_TIME */
+   ecore_timer_add(E_TEST_RUNNER_WORK_TIME, _cb_work_time_out, NULL);
+   elm_run();
 }
 
 E_TC_Win *

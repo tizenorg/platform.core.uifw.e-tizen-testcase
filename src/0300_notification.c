@@ -79,6 +79,8 @@ _tc_pre_run(E_TC *tc)
    res = e_test_runner_ev_wait(tc->runner, E_TC_EVENT_TYPE_VIS_CHANGED);
    EINA_SAFETY_ON_FALSE_GOTO(res, cleanup);
 
+   e_test_runner_work();
+
    return EINA_TRUE;
 
 cleanup:

@@ -137,6 +137,7 @@ void       e_tc_win_geom_update(E_TC_Win *tw);
 void       e_tc_win_show(E_TC_Win *tw);
 void       e_tc_win_hide(E_TC_Win *tw);
 Eina_Bool  e_tc_win_transient_for_set(E_TC_Win *tw_parent, E_TC_Win *tw_child, Eina_Bool set);
+void       e_test_runner_work(void);
 
 /* test cases */
 Eina_Bool  tc_0000_base_pass(E_TC *tc);

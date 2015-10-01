@@ -57,6 +57,8 @@ _tc_pre_run(E_TC *tc)
                                     EINA_TRUE);
    EINA_SAFETY_ON_FALSE_GOTO(res, cleanup);
 
+   e_test_runner_work();
+
    return EINA_TRUE;
 
 cleanup:
