@@ -649,6 +649,74 @@ _e_test_runner_init(E_Test_Runner *runner)
 }
 
 static void
+_e_test_runner_print(E_Test_Runner *runner)
+{
+   Eina_Strbuf *buf;
+   Eina_List *l;
+   E_TC *tc;
+
+   if (!(buf = eina_strbuf_new())) return;
+
+   eina_strbuf_append(buf, "==============================================\n");
+   eina_strbuf_append(buf, "AVAILBLE TEST CASE LIST\n");
+   eina_strbuf_append(buf, "==============================================\n");
+
+   EINA_LIST_FOREACH(runner->tc_list, l, tc)
+     {
+        if (!(tc->num % 100))
+          eina_strbuf_append_printf(buf, "[GROUP %04d]\n", tc->num);
+        eina_strbuf_append_printf(buf,
+                                  " (%04d) %-32.32s\n",
+                                  tc->num,
+                                  tc->name);
+     }
+
+   printf("%s", eina_strbuf_string_get(buf));
+}
+
+static void
+_e_test_runner_parse(E_Test_Runner *runner, int argc, const char **argv)
+{
+   int i;
+
+   runner->try_group = -1;
+   runner->try_test = -1;
+   runner->try_all = EINA_FALSE;
+
+   for (i = 1; i < argc; i++)
+     {
+        if (!strcmp(argv[i], "-t"))
+          {
+             if (i + 1 == argc) break;
+             runner->try_test = atoi(argv[++i]);
+          }
+        else if (!strcmp(argv[i], "-g"))
+          {
+             if (i + 1 == argc) break;
+             runner->try_group = atoi(argv[++i]);
+             runner->try_group -= runner->try_group % 100;
+          }
+        else if (!strcmp(argv[i], "-a"))
+          {
+             runner->try_all = EINA_TRUE;
+          }
+        else if (!strcmp(argv[i], "-l"))
+          {
+             _e_test_runner_print(runner);
+             runner->skip_run = EINA_TRUE;
+          }
+     }
+
+   if ((runner->try_test == -1) &&
+       (runner->try_group == -1) &&
+       (!runner->try_all) &&
+       (!runner->skip_run))
+     {
+        runner->try_all = EINA_TRUE;
+     }
+}
+
+static void
 _e_test_runner_shutdown(E_Test_Runner *runner)
 {
    E_TC *tc;
@@ -674,14 +742,35 @@ _e_test_runner_run(E_Test_Runner *runner)
    E_TC *tc;
    Eina_Bool pass;
 
+   if (runner->skip_run) return;
+
    EINA_LIST_FOREACH(runner->tc_list, l, tc)
      {
+        if (!runner->try_all)
+          {
+             if (runner->try_group >= 0)
+               {
+                  if (((int)tc->num - runner->try_group) < 0)
+                    continue;
+                  else if (((int)tc->num - runner->try_group) >= 100)
+                    break;
+               }
+             else if (runner->try_test >= 0)
+               {
+                  if (tc->num > runner->try_test) break;
+                  if (tc->num != runner->try_test) continue;
+               }
+
+             runner->done_list = eina_list_append(runner->done_list, tc);
+          }
+
         pass = tc->func(tc);
         tc->passed = (pass == tc->expect);
 
         printf("TEST \"%s\" : %s\n",
                tc->name,
                tc->passed ? "PASS" : "FAIL");
+
      }
 }
 
@@ -689,12 +778,13 @@ static void
 _e_test_runner_result(E_Test_Runner *runner)
 {
    Eina_Strbuf *buf;
-   Eina_List *l;
+   Eina_List *results, *l;
    E_TC *tc;
    int pass_case = 0;
    int fail_case = 0;
    int total = 0;
 
+   if (runner->skip_run) return;
    if (!(buf = eina_strbuf_new())) return;
 
    eina_strbuf_append(buf, "\n\n");
@@ -702,10 +792,15 @@ _e_test_runner_result(E_Test_Runner *runner)
    eina_strbuf_append(buf, "TEST CASE RESULT\n");
    eina_strbuf_append(buf, "==============================================\n");
 
-   EINA_LIST_FOREACH(runner->tc_list, l, tc)
+   if (runner->try_all)
+     results = runner->tc_list;
+   else
+     results = runner->done_list;
+
+   EINA_LIST_FOREACH(results, l, tc)
      {
         eina_strbuf_append_printf(buf,
-                                  "[%04d] TEST \"%-30.30s\" : %s\n",
+                                  "[%04d] TEST %-30.30s : %s\n",
                                   tc->num,
                                   tc->name,
                                   tc->passed ? "PASS" : "FAIL");
@@ -768,6 +863,7 @@ elm_main(int argc EINA_UNUSED,
      }
 
    _e_test_runner_init(runner);
+   _e_test_runner_parse(runner, argc, argv);
    _e_test_runner_run(runner);
    _e_test_runner_result(runner);
    _e_test_runner_shutdown(runner);
