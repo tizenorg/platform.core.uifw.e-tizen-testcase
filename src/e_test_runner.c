@@ -77,8 +77,9 @@ _e_test_runner_window_id_get(Evas_Object *elm_win)
    if (tizen_resource) tizen_resource_destroy(tizen_resource);
 
    return id;
-#endif
+#else
    return elm_win_window_id_get(elm_win);
+#endif
 }
 
 static void
@@ -592,6 +593,12 @@ _e_tc_add(unsigned int num,
    E_TC *tc;
 
    tc = E_NEW(E_TC, 1);
+   if (!tc)
+     {
+        ERR("Can't allocate E_TC %s", name);
+        return NULL;
+     }
+
 
    tc->num = num;
    tc->name = name;

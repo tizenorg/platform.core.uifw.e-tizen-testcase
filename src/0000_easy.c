@@ -49,6 +49,12 @@ _cb_prop_registrant(void *data,
    Eina_Bool res;
    char *type;
 
+   if (!tc)
+     {
+        elm_exit();
+        return;
+     }
+
    tc->passed = EINA_FALSE;
 
    res = eldbus_message_error_get(msg, &name, &text);
@@ -59,6 +65,7 @@ _cb_prop_registrant(void *data,
    EINA_SAFETY_ON_NULL_GOTO(variant, finish);
 
    type = eldbus_message_iter_signature_get(variant);
+   EINA_SAFETY_ON_NULL_GOTO(type, finish);
    EINA_SAFETY_ON_FALSE_GOTO((type[0] == 'u'), finish);
 
    res = eldbus_message_iter_arguments_get(variant, "u", &win);
@@ -68,7 +75,7 @@ _cb_prop_registrant(void *data,
    tc->passed = EINA_TRUE;
 
 finish:
-   if ((tc) && (!tc->passed))
+   if (!tc->passed)
      {
         ERR("errname:%s errmsg:%s\n", name, text);
      }
