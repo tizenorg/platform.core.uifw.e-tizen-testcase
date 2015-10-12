@@ -86,6 +86,12 @@ typedef struct _E_TC_Data     E_TC_Data;
 struct _E_Test_Runner
 {
    Eina_List   *tc_list; // test suite
+   Eina_List   *done_list;
+
+   int try_test;
+   int try_group;
+   Eina_Bool try_all;
+   Eina_Bool skip_run;
 
    struct
    {
