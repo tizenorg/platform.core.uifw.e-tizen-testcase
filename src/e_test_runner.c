@@ -278,6 +278,9 @@ e_test_runner_req_win_register(E_Test_Runner *runner,
    Eldbus_Pending *p;
    Eina_Bool accepted = EINA_FALSE;
 
+   EINA_SAFETY_ON_NULL_RETURN_VAL(runner, EINA_FALSE);
+   EINA_SAFETY_ON_NULL_RETURN_VAL(tw, EINA_FALSE);
+
    p = eldbus_proxy_call(runner->dbus.proxy,
                          "RegisterWindow",
                          _cb_method_window_register,
@@ -298,6 +301,9 @@ e_test_runner_req_win_deregister(E_Test_Runner *runner,
 {
    Eldbus_Pending *p;
    Eina_Bool allowed = EINA_FALSE;
+
+   EINA_SAFETY_ON_NULL_RETURN_VAL(runner, EINA_FALSE);
+   EINA_SAFETY_ON_NULL_RETURN_VAL(tw, EINA_FALSE);
 
    p = eldbus_proxy_call(runner->dbus.proxy,
                          "DeregisterWindow",
@@ -320,6 +326,10 @@ e_test_runner_req_win_stack_set(E_Test_Runner *runner,
                                 Eina_Bool above)
 {
    Eldbus_Pending *p;
+
+   EINA_SAFETY_ON_NULL_RETURN_VAL(runner, EINA_FALSE);
+   EINA_SAFETY_ON_NULL_RETURN_VAL(tw, EINA_FALSE);
+
    p = eldbus_proxy_call(runner->dbus.proxy,
                          "SetWindowStack",
                          NULL,
@@ -339,6 +349,9 @@ e_test_runner_req_win_info_list_get(E_Test_Runner *runner)
 {
    Eldbus_Pending *p;
    Eina_List *list = NULL;
+
+   EINA_SAFETY_ON_NULL_RETURN_VAL(runner, EINA_FALSE);
+
    list = eina_list_append(list, NULL);
 
    p = eldbus_proxy_call(runner->dbus.proxy,
@@ -362,6 +375,7 @@ e_test_runner_ev_wait(E_Test_Runner *runner,
    Eldbus_Signal_Handler *sh;
    Eina_Bool res = EINA_FALSE;
 
+   EINA_SAFETY_ON_NULL_RETURN_VAL(runner, EINA_FALSE);
    EINA_SAFETY_ON_FALSE_RETURN_VAL((E_TC_EVENT_TYPE_NONE < ev), res);
    EINA_SAFETY_ON_FALSE_RETURN_VAL((E_TC_EVENT_TYPE_MAX > ev), res);
 
@@ -522,6 +536,8 @@ e_tc_win_del(E_TC_Win *tw)
 void
 e_tc_win_geom_update(E_TC_Win *tw)
 {
+   EINA_SAFETY_ON_NULL_RETURN(tw);
+
    evas_object_move(tw->elm_win, tw->x, tw->y);
    evas_object_resize(tw->elm_win, tw->w, tw->h);
 }
@@ -529,12 +545,16 @@ e_tc_win_geom_update(E_TC_Win *tw)
 void
 e_tc_win_show(E_TC_Win *tw)
 {
+   EINA_SAFETY_ON_NULL_RETURN(tw);
+
    evas_object_show(tw->elm_win);
 }
 
 void
 e_tc_win_hide(E_TC_Win *tw)
 {
+   EINA_SAFETY_ON_NULL_RETURN(tw);
+
    evas_object_hide(tw->elm_win);
 }
 
