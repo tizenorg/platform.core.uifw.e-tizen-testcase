@@ -17,6 +17,7 @@ BuildRequires: gettext
 BuildRequires: pkgconfig(tizen-extension-client)
 %endif
 
+%global TZ_SYS_RO_SHARE  %{?TZ_SYS_RO_SHARE:%TZ_SYS_RO_SHARE}%{!?TZ_SYS_RO_SHARE:/usr/share}
 
 %description
 This package is a test case runner for enlightenment.
@@ -44,13 +45,13 @@ make %{?_smp_mflags}
 rm -rf %{buildroot}
 
 # for license notification
-mkdir -p %{buildroot}/usr/share/license
-cp -a %{_builddir}/%{buildsubdir}/COPYING %{buildroot}/usr/share/license/%{name}
+mkdir -p %{buildroot}/%{TZ_SYS_RO_SHARE}/license
+cp -a %{_builddir}/%{buildsubdir}/COPYING %{buildroot}/%{TZ_SYS_RO_SHARE}/license/%{name}
 
 # install
 make install DESTDIR=%{buildroot}
 
 %files
 %defattr(-,root,root,-)
-/usr/share/license/%{name}
+%{TZ_SYS_RO_SHARE}/license/%{name}
 %{_bindir}/e_test_runner
