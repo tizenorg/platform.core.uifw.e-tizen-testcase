@@ -4,14 +4,9 @@
 #include "config.h"
 #include <Eldbus.h>
 #include <Elementary.h>
-
-#if HAVE_WAYLAND
- #include <Ecore_Wayland.h>
- #include <wayland-client.h>
- #include <tizen-extension-client-protocol.h>
-#else
- #include <Ecore_X.h>
-#endif
+#include <Ecore_Wayland.h>
+#include <wayland-client.h>
+#include <tizen-extension-client-protocol.h>
 
 extern int _log_dom;
 

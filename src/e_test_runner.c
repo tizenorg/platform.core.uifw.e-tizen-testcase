@@ -4,7 +4,6 @@
 
 int _log_dom = -1;
 
-#if HAVE_WAYLAND
 struct tizen_policy *tizen_policy = NULL;
 struct tizen_surface *tizen_surface = NULL;
 
@@ -24,12 +23,10 @@ static const struct tizen_resource_listener _tizen_resource_listener =
 {
    _e_test_runner_cb_resource_id,
 };
-#endif
 
 static Ecore_Window
 _e_test_runner_window_id_get(Evas_Object *elm_win)
 {
-#if HAVE_WAYLAND
    Ecore_Wl_Window *wlwin;
    struct wl_surface *surf;
    Ecore_Window id = 0;
@@ -77,9 +74,6 @@ _e_test_runner_window_id_get(Evas_Object *elm_win)
    if (tizen_resource) tizen_resource_destroy(tizen_resource);
 
    return id;
-#else
-   return elm_win_window_id_get(elm_win);
-#endif
 }
 
 static void
@@ -541,7 +535,6 @@ e_tc_win_hide(E_TC_Win *tw)
 Eina_Bool
 e_tc_win_transient_for_set(E_TC_Win *tw_child, E_TC_Win *tw_parent, Eina_Bool set)
 {
-#if HAVE_WAYLAND
    Eina_Inlist *globals;
    Ecore_Wl_Global *global;
    struct wl_registry *registry;
@@ -573,13 +566,6 @@ e_tc_win_transient_for_set(E_TC_Win *tw_child, E_TC_Win *tw_parent, Eina_Bool se
    else
      tizen_policy_unset_transient_for(tizen_policy,
                                     tw_child->native_win);
-#else
-   if (set)
-     ecore_x_icccm_transient_for_set(tw_child->native_win,
-                                     tw_parent->native_win);
-   else
-     ecore_x_icccm_transient_for_unset(tw_child->native_win);
-#endif
    return EINA_TRUE;
 }
 
@@ -658,13 +644,11 @@ _e_test_runner_shutdown(E_Test_Runner *runner)
         E_FREE(tc);
      }
 
-#if HAVE_WAYLAND
    if (tizen_surface) tizen_surface_destroy(tizen_surface);
    if (tizen_policy) tizen_policy_destroy(tizen_policy);
 
    tizen_surface = NULL;
    tizen_policy = NULL;
-#endif
 }
 
 static void

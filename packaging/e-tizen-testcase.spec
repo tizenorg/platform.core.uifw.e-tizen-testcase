@@ -1,6 +1,3 @@
-%bcond_with wayland
-%bcond_with x
-
 Name: e-tizen-testcase
 Version: 0.0.7
 Release: 1
@@ -13,9 +10,7 @@ BuildRequires: pkgconfig(enlightenment)
 BuildRequires: pkgconfig(eldbus)
 BuildRequires: pkgconfig(capi-ui-efl-util)
 BuildRequires: gettext
-%if %{with wayland}
 BuildRequires: pkgconfig(tizen-extension-client)
-%endif
 
 %global TZ_SYS_RO_SHARE  %{?TZ_SYS_RO_SHARE:%TZ_SYS_RO_SHARE}%{!?TZ_SYS_RO_SHARE:/usr/share}
 
@@ -32,13 +27,7 @@ export CFLAGS+=" -Wall -g -fPIC -rdynamic ${GC_SECTIONS_FLAGS}"
 export LDFLAGS+=" -Wl,--hash-style=both -Wl,--as-needed -Wl,--rpath=/usr/lib"
 
 %autogen
-%configure --prefix=/usr \
-%if %{with x}
-      --with-x11
-%endif
-%if %{with wayland}
-      --with-wayland
-%endif
+%configure --prefix=/usr
 make %{?_smp_mflags}
 
 %install
