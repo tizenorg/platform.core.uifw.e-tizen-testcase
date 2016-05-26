@@ -50,19 +50,19 @@ _tc_pre_run(E_TC *tc)
    data->tw_normal = e_tc_win_add(NULL, ELM_WIN_BASIC,
                                   EINA_FALSE, "tw_normal",
                                   0, 0, TW_W, TW_H,
-                                  200);
+                                  200, E_TC_WIN_COLOR_RED);
    EINA_SAFETY_ON_NULL_GOTO(data->tw_normal, cleanup);
 
    data->tw_noti1 = e_tc_win_add(NULL, ELM_WIN_NOTIFICATION,
                                  EINA_FALSE, "tw_noti1",
                                  0, 0, TW_W, TW_H,
-                                 200);
+                                 200, E_TC_WIN_COLOR_GREEN);
    EINA_SAFETY_ON_NULL_GOTO(data->tw_noti1, cleanup);
 
    data->tw_noti2 = e_tc_win_add(NULL, ELM_WIN_NOTIFICATION,
                                  EINA_FALSE, "tw_noti2",
                                  0, 0, TW_W, TW_H,
-                                 200);
+                                 200, E_TC_WIN_COLOR_BLUE);
    EINA_SAFETY_ON_NULL_GOTO(data->tw_noti2, cleanup);
 
    res = e_test_runner_req_win_register(tc->runner, data->tw_normal);

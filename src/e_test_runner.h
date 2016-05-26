@@ -73,6 +73,18 @@ typedef enum _E_TC_Event_Type
    E_TC_EVENT_TYPE_MAX
 } E_TC_Event_Type;
 
+typedef enum _E_TC_Win_Color
+{
+   E_TC_WIN_COLOR_BLACK = 0,
+   E_TC_WIN_COLOR_WHITE,
+   E_TC_WIN_COLOR_RED,
+   E_TC_WIN_COLOR_GREEN,
+   E_TC_WIN_COLOR_BLUE,
+   E_TC_WIN_COLOR_YELLOW,
+   E_TC_WIN_COLOR_CYAN,
+   E_TC_WIN_COLOR_PURPLE,
+} E_TC_Win_Color;
+
 typedef struct _E_Test_Runner E_Test_Runner;
 typedef struct _E_TC_Win      E_TC_Win;
 typedef struct _E_TC          E_TC;
@@ -125,7 +137,7 @@ Eina_List *e_test_runner_req_win_info_list_get(E_Test_Runner *runner);
 Eina_Bool  e_test_runner_req_win_stack_set(E_Test_Runner *runner, E_TC_Win *tw, E_TC_Win *sibling, Eina_Bool above);
 Eina_Bool  e_test_runner_ev_wait(E_Test_Runner *runner, E_TC_Event_Type ev);
 
-E_TC_Win  *e_tc_win_add(E_TC_Win *parent, Elm_Win_Type type, Eina_Bool alpha, const char *name, int x, int y, int w, int h, int layer);
+E_TC_Win  *e_tc_win_add(E_TC_Win *parent, Elm_Win_Type type, Eina_Bool alpha, const char *name, int x, int y, int w, int h, int layer, E_TC_Win_Color color);
 E_TC_Win  *e_tc_win_info_add(Ecore_Window native_win, Eina_Bool alpha, const char *name, int x, int y, int w, int h, int layer);
 void       e_tc_win_del(E_TC_Win *tw);
 void       e_tc_win_geom_update(E_TC_Win *tw);
@@ -144,6 +156,22 @@ Eina_Bool  tc_0100_win_show(E_TC *tc);
 Eina_Bool  tc_0101_win_stack(E_TC *tc);
 Eina_Bool  tc_0110_alpha_win_show(E_TC *tc);
 Eina_Bool  tc_0111_alpha_win_stack(E_TC *tc);
+
+Eina_Bool  tc_0150_multi_all_wins_basic(E_TC *tc);
+Eina_Bool  tc_0151_multi_all_wins_show1(E_TC *tc);
+Eina_Bool  tc_0152_multi_all_wins_show2(E_TC *tc);
+Eina_Bool  tc_0153_multi_all_wins_show3(E_TC *tc);
+Eina_Bool  tc_0154_multi_all_wins_raise1(E_TC *tc);
+Eina_Bool  tc_0155_multi_all_wins_raise2(E_TC *tc);
+Eina_Bool  tc_0156_multi_all_wins_stack_above1(E_TC *tc);
+Eina_Bool  tc_0157_multi_all_wins_stack_above2(E_TC *tc);
+Eina_Bool  tc_0158_multi_all_wins_stack_above3(E_TC *tc);
+Eina_Bool  tc_0159_multi_all_wins_lower1(E_TC *tc);
+Eina_Bool  tc_0160_multi_all_wins_lower2(E_TC *tc);
+
+Eina_Bool  tc_0180_multi_2wins_show1(E_TC *tc);
+Eina_Bool  tc_0181_multi_2wins_show2(E_TC *tc);
+Eina_Bool  tc_0182_multi_2wins_show3(E_TC *tc);
 
 Eina_Bool  tc_0200_transient_for_basic(E_TC *tc);
 Eina_Bool  tc_0201_transient_for_raise(E_TC *tc);
