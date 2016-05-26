@@ -429,7 +429,7 @@ e_tc_win_add(E_TC_Win *parent,
              const char *name,
              int x, int y,
              int w, int h,
-             int layer)
+             int layer, E_TC_Win_Color color)
 {
    E_TC_Win *tw = NULL;
    Evas_Object *elm_win = NULL, *bg = NULL;
@@ -444,11 +444,42 @@ e_tc_win_add(E_TC_Win *parent,
 
    elm_win_title_set(elm_win, name);
    elm_win_autodel_set(elm_win, EINA_FALSE);
+   elm_win_borderless_set(elm_win, EINA_TRUE);
+   elm_win_aux_hint_add(elm_win, "wm.policy.win.user.geometry", "1");
 
    bg = elm_bg_add(elm_win);
    evas_object_size_hint_weight_set(bg, EVAS_HINT_EXPAND, EVAS_HINT_EXPAND);
    elm_win_resize_object_add(elm_win, bg);
-   elm_bg_color_set(bg, 0, 120, 100);
+   switch (color)
+     {
+      case E_TC_WIN_COLOR_BLACK:
+        elm_bg_color_set(bg, 0, 0, 0);
+        break;
+      case E_TC_WIN_COLOR_WHITE:
+        elm_bg_color_set(bg, 255, 255, 255);
+        break;
+      case E_TC_WIN_COLOR_RED:
+        elm_bg_color_set(bg, 255, 0, 0);
+        break;
+      case E_TC_WIN_COLOR_GREEN:
+        elm_bg_color_set(bg, 0, 255, 0);
+        break;
+      case E_TC_WIN_COLOR_BLUE:
+        elm_bg_color_set(bg, 0, 0, 255);
+        break;
+      case E_TC_WIN_COLOR_YELLOW:
+        elm_bg_color_set(bg, 255, 255, 0);
+        break;
+      case E_TC_WIN_COLOR_CYAN:
+        elm_bg_color_set(bg, 0, 255, 255);
+        break;
+      case E_TC_WIN_COLOR_PURPLE:
+        elm_bg_color_set(bg, 255, 0, 255);
+        break;
+      default:
+        elm_bg_color_set(bg, 255, 0, 0);
+        break;
+     }
    evas_object_show(bg);
 
    tw = E_NEW(E_TC_Win, 1);
@@ -606,30 +637,48 @@ _e_test_runner_init(E_Test_Runner *runner)
 #undef T_FUNC
 #define T_FUNC(num_, test_) tc_000##num_##_##test_
    /* [0000 - 0099] test runner verification */
-   TC_ADD(   0, "Base: Pass",                 T_FUNC(   0, base_pass                ), 1);
-   TC_ADD(   1, "Base: Fail",                 T_FUNC(   1, base_fail                ), 0);
+   TC_ADD(   0, "Base: Pass",                   T_FUNC(   0, base_pass ), 1);
+   TC_ADD(   1, "Base: Fail",                   T_FUNC(   1, base_fail ), 0);
 #undef T_FUNC
 #define T_FUNC(num_, test_) tc_00##num_##_##test_
-   TC_ADD(  10, "DBus: Introspect",           T_FUNC(  10, introspect               ), 1);
-   TC_ADD(  11, "DBus: Window register",      T_FUNC(  11, win_register             ), 1);
+   TC_ADD(  10, "DBus: Introspect",             T_FUNC(  10, introspect   ), 1);
+   TC_ADD(  11, "DBus: Window register",        T_FUNC(  11, win_register ), 1);
 #undef T_FUNC
 #define T_FUNC(num_, test_) tc_0##num_##_##test_
    /* [0100 - 0199] window base operation */
-   TC_ADD( 100, "Basic window: Show",         T_FUNC( 100, win_show                 ), 1);
-   TC_ADD( 101, "Basic window: Stack",        T_FUNC( 101, win_stack                ), 1);
-   TC_ADD( 110, "Alpha window: Show",         T_FUNC( 110, alpha_win_show           ), 1);
-   TC_ADD( 111, "Alpha window: Stack",        T_FUNC( 111, alpha_win_stack          ), 1);
+   TC_ADD( 100, "Basic window: Show",           T_FUNC( 100, win_show        ), 1);
+   TC_ADD( 101, "Basic window: Stack",          T_FUNC( 101, win_stack       ), 1);
+   TC_ADD( 110, "Alpha window: Show",           T_FUNC( 110, alpha_win_show  ), 1);
+   TC_ADD( 111, "Alpha window: Stack",          T_FUNC( 111, alpha_win_stack ), 1);
+
+   TC_ADD( 150, "Multi window: Basic",          T_FUNC( 150, multi_all_wins_basic        ), 1);
+   TC_ADD( 151, "Multi window: 3 Show1",        T_FUNC( 151, multi_all_wins_show1        ), 1);
+   TC_ADD( 152, "Multi window: 3 Show2",        T_FUNC( 152, multi_all_wins_show2        ), 1);
+   TC_ADD( 153, "Multi window: 3 Show3",        T_FUNC( 153, multi_all_wins_show3        ), 1);
+   TC_ADD( 154, "Multi window: 3 Raise1",       T_FUNC( 154, multi_all_wins_raise1       ), 1);
+   TC_ADD( 155, "Multi window: 3 Raise2",       T_FUNC( 155, multi_all_wins_raise2       ), 1);
+   TC_ADD( 156, "Multi window: 3 Stack Above1", T_FUNC( 156, multi_all_wins_stack_above1 ), 1);
+   TC_ADD( 157, "Multi window: 3 Stack Above2", T_FUNC( 157, multi_all_wins_stack_above2 ), 1);
+   TC_ADD( 158, "Multi window: 3 Stack Above3", T_FUNC( 158, multi_all_wins_stack_above3 ), 1);
+   TC_ADD( 159, "Multi window: 3 Lower1",       T_FUNC( 159, multi_all_wins_lower1       ), 1);
+   TC_ADD( 160, "Multi window: 3 Lower2",       T_FUNC( 160, multi_all_wins_lower2       ), 1);
+
+   TC_ADD( 180, "Multi window: 2 Show1",        T_FUNC( 180, multi_2wins_show1 ), 1);
+   TC_ADD( 181, "Multi window: 2 Show2",        T_FUNC( 181, multi_2wins_show2 ), 1);
+   TC_ADD( 182, "Multi window: 2 Show3",        T_FUNC( 182, multi_2wins_show3 ), 1);
+
    /* [0200 - 0299] transient for */
-   TC_ADD( 200, "Transient for: Basic",       T_FUNC( 200, transient_for_basic      ), 1);
-   TC_ADD( 201, "Transient for: Raise",       T_FUNC( 201, transient_for_raise      ), 1);
-   TC_ADD( 202, "Transient for: Lower",       T_FUNC( 202, transient_for_lower      ), 1);
-   TC_ADD( 203, "Transient for: Stack above", T_FUNC( 203, transient_for_stack_above), 1);
-   TC_ADD( 204, "Transient for: Stack below", T_FUNC( 204, transient_for_stack_below), 1);
+   TC_ADD( 200, "Transient for: Basic",         T_FUNC( 200, transient_for_basic       ), 1);
+   TC_ADD( 201, "Transient for: Raise",         T_FUNC( 201, transient_for_raise       ), 1);
+   TC_ADD( 202, "Transient for: Lower",         T_FUNC( 202, transient_for_lower       ), 1);
+   TC_ADD( 203, "Transient for: Stack above",   T_FUNC( 203, transient_for_stack_above ), 1);
+   TC_ADD( 204, "Transient for: Stack below",   T_FUNC( 204, transient_for_stack_below ), 1);
+
    /* [0300 - 0399] notification */
-   TC_ADD( 300, "Noti Level 1",               T_FUNC( 300, notification_level_1     ), 1);
-   TC_ADD( 301, "Noti Level 2",               T_FUNC( 301, notification_level_2     ), 1);
-   TC_ADD( 302, "Noti Level 3",               T_FUNC( 302, notification_level_3     ), 1);
-   TC_ADD( 303, "Noti Level Change",          T_FUNC( 303, notification_level_change), 1);
+   TC_ADD( 300, "Noti Level 1",                 T_FUNC( 300, notification_level_1      ), 1);
+   TC_ADD( 301, "Noti Level 2",                 T_FUNC( 301, notification_level_2      ), 1);
+   TC_ADD( 302, "Noti Level 3",                 T_FUNC( 302, notification_level_3      ), 1);
+   TC_ADD( 303, "Noti Level Change",            T_FUNC( 303, notification_level_change ), 1);
    /* TODO */
 #undef T_FUNC
 }
