@@ -6,7 +6,7 @@ struct _E_TC_Data
 };
 
 static Eina_Bool _tc_pre_run(E_TC *tc, Eina_Bool alpha);
-static Eina_Bool _tc_post_run(E_TC *tc);
+static void      _tc_post_run(E_TC *tc);
 static void      _tc_shutdown(E_TC *tc);
 
 static Eina_Bool
@@ -19,8 +19,8 @@ _tc_pre_run(E_TC *tc, Eina_Bool alpha)
 
    tc->data->tw = e_tc_win_add(NULL, ELM_WIN_BASIC,
                                alpha, "tc",
-                               0, 0, 320, 320,
-                               200);
+                               0, 0, 320, 320, EINA_FALSE,
+                               200, E_TC_WIN_COLOR_GREEN);
    EINA_SAFETY_ON_NULL_GOTO(tc->data->tw, cleanup);
 
    res = e_test_runner_req_win_register(tc->runner, tc->data->tw);
@@ -41,12 +41,10 @@ cleanup:
    return EINA_FALSE;
 }
 
-static Eina_Bool
+static void
 _tc_post_run(E_TC *tc)
 {
    e_tc_win_hide(tc->data->tw);
-
-   return EINA_TRUE;
 }
 
 static void
@@ -70,12 +68,10 @@ tc_0100_win_show(E_TC *tc)
    res = _tc_pre_run(tc, EINA_FALSE);
    EINA_SAFETY_ON_FALSE_GOTO(res, cleanup);
 
-   res = _tc_post_run(tc);
-   EINA_SAFETY_ON_FALSE_GOTO(res, cleanup);
-
    tc->passed = EINA_TRUE;
 
 cleanup:
+   _tc_post_run(tc);
    _tc_shutdown(tc);
 
    return tc->passed;
@@ -111,12 +107,10 @@ tc_0101_win_stack(E_TC *tc)
 
    EINA_SAFETY_ON_FALSE_GOTO(res, cleanup);
 
-   res = _tc_post_run(tc);
-   EINA_SAFETY_ON_FALSE_GOTO(res, cleanup);
-
    tc->passed = EINA_TRUE;
 
 cleanup:
+   _tc_post_run(tc);
    _tc_shutdown(tc);
    E_FREE_LIST(list, e_tc_win_del);
 
@@ -133,12 +127,10 @@ tc_0110_alpha_win_show(E_TC *tc)
    res = _tc_pre_run(tc, EINA_TRUE);
    EINA_SAFETY_ON_FALSE_GOTO(res, cleanup);
 
-   res = _tc_post_run(tc);
-   EINA_SAFETY_ON_FALSE_GOTO(res, cleanup);
-
    tc->passed = EINA_TRUE;
 
 cleanup:
+   _tc_post_run(tc);
    _tc_shutdown(tc);
 
    return tc->passed;
@@ -174,12 +166,10 @@ tc_0111_alpha_win_stack(E_TC *tc)
 
    EINA_SAFETY_ON_FALSE_GOTO(res, cleanup);
 
-   res = _tc_post_run(tc);
-   EINA_SAFETY_ON_FALSE_GOTO(res, cleanup);
-
    tc->passed = EINA_TRUE;
 
 cleanup:
+   _tc_post_run(tc);
    _tc_shutdown(tc);
    E_FREE_LIST(list, e_tc_win_del);
 

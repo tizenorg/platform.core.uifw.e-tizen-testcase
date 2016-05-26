@@ -12,6 +12,7 @@ e_test_runner.c \
 e_test_runner.h \
 0000_easy.c \
 0100_base_operation.c \
+0150_base_operation_multi_wins.c \
 0200_transient_for.c \
 0300_notification.c
 
