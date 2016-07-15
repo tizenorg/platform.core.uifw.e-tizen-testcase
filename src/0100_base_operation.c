@@ -44,12 +44,16 @@ cleanup:
 static void
 _tc_post_run(E_TC *tc)
 {
+   EINA_SAFETY_ON_NULL_RETURN(tc);
+   EINA_SAFETY_ON_NULL_RETURN(tc->data);
+
    e_tc_win_hide(tc->data->tw);
 }
 
 static void
 _tc_shutdown(E_TC *tc)
 {
+   EINA_SAFETY_ON_NULL_RETURN(tc);
    EINA_SAFETY_ON_NULL_RETURN(tc->data);
 
    e_test_runner_req_win_deregister(tc->runner, tc->data->tw);

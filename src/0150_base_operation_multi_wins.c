@@ -10,9 +10,9 @@ struct _E_TC_Data
 
 static Eina_Bool _tc_win_register(E_TC *tc, E_TC_Win *win);
 static void      _tc_win_unregister(E_TC *tc);
-static Eina_Bool _tc_pre_run(E_TC *tc, Eina_Bool alpha);
-static void      _tc_post_run(E_TC *tc);
-static void      _tc_shutdown(E_TC *tc);
+static Eina_Bool _tc_multi_wins_pre_run(E_TC *tc, Eina_Bool alpha);
+static void      _tc_multi_wins_post_run(E_TC *tc);
+static void      _tc_multi_wins_shutdown(E_TC *tc);
 
 static Eina_Bool
 _tc_win_register(E_TC *tc, E_TC_Win *win)
@@ -23,6 +23,12 @@ _tc_win_register(E_TC *tc, E_TC_Win *win)
    EINA_SAFETY_ON_NULL_RETURN_VAL(tc->data, EINA_FALSE);
 
    EINA_SAFETY_ON_NULL_RETURN_VAL(win, EINA_FALSE);
+
+   if (tc->data->tw_register)
+     {
+        e_test_runner_req_win_deregister(tc->runner, tc->data->tw_register);
+		tc->data->tw_register = NULL;
+     }
 
    tc->data->tw_register = win;
 
@@ -45,7 +51,7 @@ _tc_win_unregister(E_TC *tc)
 
 
 static Eina_Bool
-_tc_pre_run(E_TC *tc, Eina_Bool show_win)
+_tc_multi_wins_pre_run(E_TC *tc, Eina_Bool show_win)
 {
    Eina_Bool res;
 
@@ -66,7 +72,7 @@ _tc_pre_run(E_TC *tc, Eina_Bool show_win)
 
    tc->data->tw_green = e_tc_win_add(NULL, ELM_WIN_BASIC,
                                      EINA_FALSE, "green",
-                                     150, 150, 320, 320, EINA_TRUE,
+                                     150, 150, 400, 400, EINA_TRUE,
                                      200, E_TC_WIN_COLOR_GREEN);
    EINA_SAFETY_ON_NULL_GOTO(tc->data->tw_green, cleanup);
 
@@ -78,7 +84,7 @@ _tc_pre_run(E_TC *tc, Eina_Bool show_win)
 
    tc->data->tw_blue = e_tc_win_add(NULL, ELM_WIN_BASIC,
                                     EINA_FALSE, "blue",
-                                    20, 350, 500, 500, EINA_TRUE,
+                                    20, 350, 400, 400, EINA_TRUE,
                                     200, E_TC_WIN_COLOR_BLUE);
    EINA_SAFETY_ON_NULL_GOTO(tc->data->tw_blue, cleanup);
 
@@ -98,12 +104,12 @@ _tc_pre_run(E_TC *tc, Eina_Bool show_win)
    return EINA_TRUE;
 
 cleanup:
-   _tc_shutdown(tc);
+   _tc_multi_wins_shutdown(tc);
    return EINA_FALSE;
 }
 
 static void
-_tc_post_run(E_TC *tc)
+_tc_multi_wins_post_run(E_TC *tc)
 {
    EINA_SAFETY_ON_NULL_RETURN(tc->data);
 
@@ -113,7 +119,7 @@ _tc_post_run(E_TC *tc)
 }
 
 static void
-_tc_shutdown(E_TC *tc)
+_tc_multi_wins_shutdown(E_TC *tc)
 {
    EINA_SAFETY_ON_NULL_RETURN(tc->data);
 
@@ -123,6 +129,23 @@ _tc_shutdown(E_TC *tc)
    e_tc_win_del(tc->data->tw_blue);
 
    E_FREE(tc->data);
+}
+
+static Eina_Bool
+_tc_win_show(E_TC *tc, E_TC_Win *tw)
+{
+   Eina_Bool res = EINA_FALSE;
+
+   res = _tc_win_register(tc, tw);
+   EINA_SAFETY_ON_FALSE_RETURN_VAL(res, EINA_FALSE);
+
+   e_tc_win_geom_update(tw);
+   e_tc_win_show(tw);
+
+   res = e_test_runner_ev_wait(tc->runner, E_TC_EVENT_TYPE_VIS_ON);
+   EINA_SAFETY_ON_FALSE_RETURN_VAL(res, EINA_FALSE);
+
+   return EINA_TRUE;
 }
 
 Eina_Bool
@@ -136,7 +159,7 @@ tc_0150_multi_all_wins_basic(E_TC *tc)
 
    EINA_SAFETY_ON_NULL_RETURN_VAL(tc, EINA_FALSE);
 
-   res = _tc_pre_run(tc, EINA_TRUE);
+   res = _tc_multi_wins_pre_run(tc, EINA_TRUE);
    EINA_SAFETY_ON_FALSE_GOTO(res, cleanup);
 
    tw_red = tc->data->tw_red;
@@ -179,8 +202,8 @@ tc_0150_multi_all_wins_basic(E_TC *tc)
    tc->passed = EINA_TRUE;
 
 cleanup:
-   _tc_post_run(tc);
-   _tc_shutdown(tc);
+   _tc_multi_wins_post_run(tc);
+   _tc_multi_wins_shutdown(tc);
    E_FREE_LIST(list, e_tc_win_del);
 
    return tc->passed;
@@ -196,8 +219,7 @@ tc_0151_multi_all_wins_show1(E_TC *tc)
    int pass_count;
 
    EINA_SAFETY_ON_NULL_RETURN_VAL(tc, EINA_FALSE);
-
-   res = _tc_pre_run(tc, EINA_FALSE);
+   res = _tc_multi_wins_pre_run(tc, EINA_FALSE);
    EINA_SAFETY_ON_FALSE_GOTO(res, cleanup);
 
    tw_red = tc->data->tw_red;
@@ -205,23 +227,15 @@ tc_0151_multi_all_wins_show1(E_TC *tc)
    tw_blue = tc->data->tw_blue;
 
    // show red
-   e_tc_win_geom_update(tc->data->tw_red);
-   e_tc_win_show(tc->data->tw_red);
+   res = _tc_win_show(tc, tc->data->tw_red);
+   EINA_SAFETY_ON_FALSE_GOTO(res, cleanup);
 
    // show green
-   e_tc_win_geom_update(tc->data->tw_green);
-   e_tc_win_show(tc->data->tw_green);
-
-   // register blue
-   res = _tc_win_register(tc, tc->data->tw_blue);
+   res = _tc_win_show(tc, tc->data->tw_green);
    EINA_SAFETY_ON_FALSE_GOTO(res, cleanup);
 
    // show blue
-   e_tc_win_geom_update(tc->data->tw_blue);
-   e_tc_win_show(tc->data->tw_blue);
-
-   // wait for showing register_win
-   res = e_test_runner_ev_wait(tc->runner, E_TC_EVENT_TYPE_VIS_ON);
+   res = _tc_win_show(tc, tc->data->tw_blue);
    EINA_SAFETY_ON_FALSE_GOTO(res, cleanup);
 
    // Expected stack result:
@@ -260,8 +274,8 @@ tc_0151_multi_all_wins_show1(E_TC *tc)
    tc->passed = EINA_TRUE;
 
 cleanup:
-   _tc_post_run(tc);
-   _tc_shutdown(tc);
+   _tc_multi_wins_post_run(tc);
+   _tc_multi_wins_shutdown(tc);
    E_FREE_LIST(list, e_tc_win_del);
 
    return tc->passed;
@@ -278,7 +292,7 @@ tc_0152_multi_all_wins_show2(E_TC *tc)
 
    EINA_SAFETY_ON_NULL_RETURN_VAL(tc, EINA_FALSE);
 
-   res = _tc_pre_run(tc, EINA_FALSE);
+   res = _tc_multi_wins_pre_run(tc, EINA_FALSE);
    EINA_SAFETY_ON_FALSE_GOTO(res, cleanup);
 
    tw_red = tc->data->tw_red;
@@ -286,23 +300,15 @@ tc_0152_multi_all_wins_show2(E_TC *tc)
    tw_blue = tc->data->tw_blue;
 
    // show blue
-   e_tc_win_geom_update(tc->data->tw_blue);
-   e_tc_win_show(tc->data->tw_blue);
+   res = _tc_win_show(tc, tc->data->tw_blue);
+   EINA_SAFETY_ON_FALSE_GOTO(res, cleanup);
 
    // show red
-   e_tc_win_geom_update(tc->data->tw_red);
-   e_tc_win_show(tc->data->tw_red);
-
-   // register green
-   res = _tc_win_register(tc, tc->data->tw_green);
+   res = _tc_win_show(tc, tc->data->tw_red);
    EINA_SAFETY_ON_FALSE_GOTO(res, cleanup);
 
    // show green
-   e_tc_win_geom_update(tc->data->tw_green);
-   e_tc_win_show(tc->data->tw_green);
-
-   // wait for showing register_win
-   res = e_test_runner_ev_wait(tc->runner, E_TC_EVENT_TYPE_VIS_ON);
+   res = _tc_win_show(tc, tc->data->tw_green);
    EINA_SAFETY_ON_FALSE_GOTO(res, cleanup);
 
    // Expected stack result:
@@ -341,8 +347,8 @@ tc_0152_multi_all_wins_show2(E_TC *tc)
    tc->passed = EINA_TRUE;
 
 cleanup:
-   _tc_post_run(tc);
-   _tc_shutdown(tc);
+   _tc_multi_wins_post_run(tc);
+   _tc_multi_wins_shutdown(tc);
    E_FREE_LIST(list, e_tc_win_del);
 
    return tc->passed;
@@ -360,7 +366,7 @@ tc_0153_multi_all_wins_show3(E_TC *tc)
 
    EINA_SAFETY_ON_NULL_RETURN_VAL(tc, EINA_FALSE);
 
-   res = _tc_pre_run(tc, EINA_FALSE);
+   res = _tc_multi_wins_pre_run(tc, EINA_FALSE);
    EINA_SAFETY_ON_FALSE_GOTO(res, cleanup);
 
    tw_red = tc->data->tw_red;
@@ -368,23 +374,15 @@ tc_0153_multi_all_wins_show3(E_TC *tc)
    tw_blue = tc->data->tw_blue;
 
    // show green
-   e_tc_win_geom_update(tc->data->tw_green);
-   e_tc_win_show(tc->data->tw_green);
+   res = _tc_win_show(tc, tc->data->tw_green);
+   EINA_SAFETY_ON_FALSE_GOTO(res, cleanup);
 
    // show blue
-   e_tc_win_geom_update(tc->data->tw_blue);
-   e_tc_win_show(tc->data->tw_blue);
-
-   // register red
-   res = _tc_win_register(tc, tc->data->tw_red);
+   res = _tc_win_show(tc, tc->data->tw_blue);
    EINA_SAFETY_ON_FALSE_GOTO(res, cleanup);
 
    // show red
-   e_tc_win_geom_update(tc->data->tw_red);
-   e_tc_win_show(tc->data->tw_red);
-
-   // wait for showing register_win
-   res = e_test_runner_ev_wait(tc->runner, E_TC_EVENT_TYPE_VIS_ON);
+   res = _tc_win_show(tc, tc->data->tw_red);
    EINA_SAFETY_ON_FALSE_GOTO(res, cleanup);
 
    // Expected stack result:
@@ -423,8 +421,8 @@ tc_0153_multi_all_wins_show3(E_TC *tc)
    tc->passed = EINA_TRUE;
 
 cleanup:
-   _tc_post_run(tc);
-   _tc_shutdown(tc);
+   _tc_multi_wins_post_run(tc);
+   _tc_multi_wins_shutdown(tc);
    E_FREE_LIST(list, e_tc_win_del);
 
    return tc->passed;
@@ -441,7 +439,7 @@ tc_0154_multi_all_wins_raise1(E_TC *tc)
 
    EINA_SAFETY_ON_NULL_RETURN_VAL(tc, EINA_FALSE);
 
-   res = _tc_pre_run(tc, EINA_TRUE);
+   res = _tc_multi_wins_pre_run(tc, EINA_TRUE);
    EINA_SAFETY_ON_FALSE_GOTO(res, cleanup);
 
    tw_red = tc->data->tw_red;
@@ -493,8 +491,8 @@ tc_0154_multi_all_wins_raise1(E_TC *tc)
    tc->passed = EINA_TRUE;
 
 cleanup:
-   _tc_post_run(tc);
-   _tc_shutdown(tc);
+   _tc_multi_wins_post_run(tc);
+   _tc_multi_wins_shutdown(tc);
    E_FREE_LIST(list, e_tc_win_del);
 
    return tc->passed;
@@ -511,7 +509,7 @@ tc_0155_multi_all_wins_raise2(E_TC *tc)
 
    EINA_SAFETY_ON_NULL_RETURN_VAL(tc, EINA_FALSE);
 
-   res = _tc_pre_run(tc, EINA_TRUE);
+   res = _tc_multi_wins_pre_run(tc, EINA_TRUE);
    EINA_SAFETY_ON_FALSE_GOTO(res, cleanup);
 
    tw_red = tc->data->tw_red;
@@ -563,8 +561,8 @@ tc_0155_multi_all_wins_raise2(E_TC *tc)
    tc->passed = EINA_TRUE;
 
 cleanup:
-   _tc_post_run(tc);
-   _tc_shutdown(tc);
+   _tc_multi_wins_post_run(tc);
+   _tc_multi_wins_shutdown(tc);
    E_FREE_LIST(list, e_tc_win_del);
 
    return tc->passed;
@@ -581,7 +579,7 @@ tc_0156_multi_all_wins_stack_above1(E_TC *tc)
 
    EINA_SAFETY_ON_NULL_RETURN_VAL(tc, EINA_FALSE);
 
-   res = _tc_pre_run(tc, EINA_TRUE);
+   res = _tc_multi_wins_pre_run(tc, EINA_TRUE);
    EINA_SAFETY_ON_FALSE_GOTO(res, cleanup);
 
    tw_red = tc->data->tw_red;
@@ -633,8 +631,8 @@ tc_0156_multi_all_wins_stack_above1(E_TC *tc)
    tc->passed = EINA_TRUE;
 
 cleanup:
-   _tc_post_run(tc);
-   _tc_shutdown(tc);
+   _tc_multi_wins_post_run(tc);
+   _tc_multi_wins_shutdown(tc);
    E_FREE_LIST(list, e_tc_win_del);
 
    return tc->passed;
@@ -652,7 +650,7 @@ tc_0157_multi_all_wins_stack_above2(E_TC *tc)
 
    EINA_SAFETY_ON_NULL_RETURN_VAL(tc, EINA_FALSE);
 
-   res = _tc_pre_run(tc, EINA_TRUE);
+   res = _tc_multi_wins_pre_run(tc, EINA_TRUE);
    EINA_SAFETY_ON_FALSE_GOTO(res, cleanup);
 
    tw_red = tc->data->tw_red;
@@ -704,8 +702,8 @@ tc_0157_multi_all_wins_stack_above2(E_TC *tc)
    tc->passed = EINA_TRUE;
 
 cleanup:
-   _tc_post_run(tc);
-   _tc_shutdown(tc);
+   _tc_multi_wins_post_run(tc);
+   _tc_multi_wins_shutdown(tc);
    E_FREE_LIST(list, e_tc_win_del);
 
    return tc->passed;
@@ -722,7 +720,7 @@ tc_0158_multi_all_wins_stack_above3(E_TC *tc)
 
    EINA_SAFETY_ON_NULL_RETURN_VAL(tc, EINA_FALSE);
 
-   res = _tc_pre_run(tc, EINA_TRUE);
+   res = _tc_multi_wins_pre_run(tc, EINA_TRUE);
    EINA_SAFETY_ON_FALSE_GOTO(res, cleanup);
 
    tw_red = tc->data->tw_red;
@@ -774,8 +772,8 @@ tc_0158_multi_all_wins_stack_above3(E_TC *tc)
    tc->passed = EINA_TRUE;
 
 cleanup:
-   _tc_post_run(tc);
-   _tc_shutdown(tc);
+   _tc_multi_wins_post_run(tc);
+   _tc_multi_wins_shutdown(tc);
    E_FREE_LIST(list, e_tc_win_del);
 
    return tc->passed;
@@ -792,7 +790,7 @@ tc_0159_multi_all_wins_lower1(E_TC *tc)
 
    EINA_SAFETY_ON_NULL_RETURN_VAL(tc, EINA_FALSE);
 
-   res = _tc_pre_run(tc, EINA_TRUE);
+   res = _tc_multi_wins_pre_run(tc, EINA_TRUE);
    EINA_SAFETY_ON_FALSE_GOTO(res, cleanup);
 
    tw_red = tc->data->tw_red;
@@ -862,8 +860,8 @@ tc_0159_multi_all_wins_lower1(E_TC *tc)
    tc->passed = EINA_TRUE;
 
 cleanup:
-   _tc_post_run(tc);
-   _tc_shutdown(tc);
+   _tc_multi_wins_post_run(tc);
+   _tc_multi_wins_shutdown(tc);
    E_FREE_LIST(list, e_tc_win_del);
 
    return tc->passed;
@@ -881,7 +879,7 @@ tc_0160_multi_all_wins_lower2(E_TC *tc)
 
    EINA_SAFETY_ON_NULL_RETURN_VAL(tc, EINA_FALSE);
 
-   res = _tc_pre_run(tc, EINA_TRUE);
+   res = _tc_multi_wins_pre_run(tc, EINA_TRUE);
    EINA_SAFETY_ON_FALSE_GOTO(res, cleanup);
 
    tw_red = tc->data->tw_red;
@@ -950,8 +948,8 @@ tc_0160_multi_all_wins_lower2(E_TC *tc)
    tc->passed = EINA_TRUE;
 
 cleanup:
-   _tc_post_run(tc);
-   _tc_shutdown(tc);
+   _tc_multi_wins_post_run(tc);
+   _tc_multi_wins_shutdown(tc);
    E_FREE_LIST(list, e_tc_win_del);
 
    return tc->passed;
@@ -969,7 +967,7 @@ tc_0180_multi_2wins_show1(E_TC *tc)
 
    EINA_SAFETY_ON_NULL_RETURN_VAL(tc, EINA_FALSE);
 
-   res = _tc_pre_run(tc, EINA_FALSE);
+   res = _tc_multi_wins_pre_run(tc, EINA_FALSE);
    EINA_SAFETY_ON_FALSE_GOTO(res, cleanup);
 
    tw_red = tc->data->tw_red;
@@ -1021,8 +1019,8 @@ tc_0180_multi_2wins_show1(E_TC *tc)
    tc->passed = EINA_TRUE;
 
 cleanup:
-   _tc_post_run(tc);
-   _tc_shutdown(tc);
+   _tc_multi_wins_post_run(tc);
+   _tc_multi_wins_shutdown(tc);
    E_FREE_LIST(list, e_tc_win_del);
 
    return tc->passed;
@@ -1040,7 +1038,7 @@ tc_0181_multi_2wins_show2(E_TC *tc)
 
    EINA_SAFETY_ON_NULL_RETURN_VAL(tc, EINA_FALSE);
 
-   res = _tc_pre_run(tc, EINA_FALSE);
+   res = _tc_multi_wins_pre_run(tc, EINA_FALSE);
    EINA_SAFETY_ON_FALSE_GOTO(res, cleanup);
 
    tw_green = tc->data->tw_green;
@@ -1092,8 +1090,8 @@ tc_0181_multi_2wins_show2(E_TC *tc)
    tc->passed = EINA_TRUE;
 
 cleanup:
-   _tc_post_run(tc);
-   _tc_shutdown(tc);
+   _tc_multi_wins_post_run(tc);
+   _tc_multi_wins_shutdown(tc);
    E_FREE_LIST(list, e_tc_win_del);
 
    return tc->passed;
@@ -1111,7 +1109,7 @@ tc_0182_multi_2wins_show3(E_TC *tc)
 
    EINA_SAFETY_ON_NULL_RETURN_VAL(tc, EINA_FALSE);
 
-   res = _tc_pre_run(tc, EINA_FALSE);
+   res = _tc_multi_wins_pre_run(tc, EINA_FALSE);
    EINA_SAFETY_ON_FALSE_GOTO(res, cleanup);
 
    tw_red = tc->data->tw_red;
@@ -1163,8 +1161,8 @@ tc_0182_multi_2wins_show3(E_TC *tc)
    tc->passed = EINA_TRUE;
 
 cleanup:
-   _tc_post_run(tc);
-   _tc_shutdown(tc);
+   _tc_multi_wins_post_run(tc);
+   _tc_multi_wins_shutdown(tc);
    E_FREE_LIST(list, e_tc_win_del);
 
    return tc->passed;
