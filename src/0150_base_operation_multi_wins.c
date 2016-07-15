@@ -53,8 +53,6 @@ _tc_win_unregister(E_TC *tc)
 static Eina_Bool
 _tc_multi_wins_pre_run(E_TC *tc, Eina_Bool show_win)
 {
-   Eina_Bool res;
-
    tc->data = E_NEW(E_TC_Data, 1);
    EINA_SAFETY_ON_NULL_RETURN_VAL(tc->data, EINA_FALSE);
 
@@ -94,9 +92,7 @@ _tc_multi_wins_pre_run(E_TC *tc, Eina_Bool show_win)
 
         e_tc_win_geom_update(tc->data->tw_blue);
         e_tc_win_show(tc->data->tw_blue);
-
-        res = e_test_runner_ev_wait(tc->runner, E_TC_EVENT_TYPE_VIS_ON);
-        EINA_SAFETY_ON_FALSE_GOTO(res, cleanup);
+        e_test_runner_ev_wait(tc->runner, E_TC_EVENT_TYPE_VIS_ON);
      }
 
    e_test_runner_work();
@@ -141,9 +137,7 @@ _tc_win_show(E_TC *tc, E_TC_Win *tw)
 
    e_tc_win_geom_update(tw);
    e_tc_win_show(tw);
-
-   res = e_test_runner_ev_wait(tc->runner, E_TC_EVENT_TYPE_VIS_ON);
-   EINA_SAFETY_ON_FALSE_RETURN_VAL(res, EINA_FALSE);
+   e_test_runner_ev_wait(tc->runner, E_TC_EVENT_TYPE_VIS_ON);
 
    return EINA_TRUE;
 }
@@ -451,9 +445,7 @@ tc_0154_multi_all_wins_raise1(E_TC *tc)
 
    // Raise Red
    e_test_runner_req_win_stack_set(tc->runner, tw_red, NULL, EINA_TRUE);
-
-   res = e_test_runner_ev_wait(tc->runner, E_TC_EVENT_TYPE_STACK_RAISE);
-   EINA_SAFETY_ON_FALSE_GOTO(res, cleanup);
+   e_test_runner_ev_wait(tc->runner, E_TC_EVENT_TYPE_STACK_RAISE);
 
    // Expected stack result:
    // [Top] Red -> Blue -> Green [Bottom]
@@ -521,9 +513,7 @@ tc_0155_multi_all_wins_raise2(E_TC *tc)
 
    // Raise Green
    e_test_runner_req_win_stack_set(tc->runner, tw_green, NULL, EINA_TRUE);
-
-   res = e_test_runner_ev_wait(tc->runner, E_TC_EVENT_TYPE_STACK_RAISE);
-   EINA_SAFETY_ON_FALSE_GOTO(res, cleanup);
+   e_test_runner_ev_wait(tc->runner, E_TC_EVENT_TYPE_STACK_RAISE);
 
    // Expected stack result:
    // [Top] Green -> Blue -> Red [Bottom]
@@ -591,9 +581,7 @@ tc_0156_multi_all_wins_stack_above1(E_TC *tc)
 
    // Raise Red on the Green
    e_test_runner_req_win_stack_set(tc->runner, tw_red, tw_green, EINA_TRUE);
-
-   res = e_test_runner_ev_wait(tc->runner, E_TC_EVENT_TYPE_STACK_RAISE);
-   EINA_SAFETY_ON_FALSE_GOTO(res, cleanup);
+   e_test_runner_ev_wait(tc->runner, E_TC_EVENT_TYPE_STACK_RAISE);
 
    // Expected stack result:
    // [Top] Blue -> Red -> Green [Bottom]
@@ -662,9 +650,7 @@ tc_0157_multi_all_wins_stack_above2(E_TC *tc)
 
    // Raise Blue on the Red
    e_test_runner_req_win_stack_set(tc->runner, tw_blue, tw_red, EINA_TRUE);
-
-   res = e_test_runner_ev_wait(tc->runner, E_TC_EVENT_TYPE_STACK_RAISE);
-   EINA_SAFETY_ON_FALSE_GOTO(res, cleanup);
+   e_test_runner_ev_wait(tc->runner, E_TC_EVENT_TYPE_STACK_RAISE);
 
    // Expected stack result:
    // [Top] Green -> Blue -> Red [Bottom]
@@ -732,9 +718,7 @@ tc_0158_multi_all_wins_stack_above3(E_TC *tc)
 
    // Raise Red on the Blue
    e_test_runner_req_win_stack_set(tc->runner, tw_red, tw_blue, EINA_TRUE);
-
-   res = e_test_runner_ev_wait(tc->runner, E_TC_EVENT_TYPE_STACK_RAISE);
-   EINA_SAFETY_ON_FALSE_GOTO(res, cleanup);
+   e_test_runner_ev_wait(tc->runner, E_TC_EVENT_TYPE_STACK_RAISE);
 
    // Expected stack result:
    // [Top] Red -> Blue -> Green [Bottom]
@@ -802,9 +786,7 @@ tc_0159_multi_all_wins_lower1(E_TC *tc)
 
    // Lower Blue
    e_test_runner_req_win_stack_set(tc->runner, tw_blue, NULL, EINA_FALSE);
-
-   res = e_test_runner_ev_wait(tc->runner, E_TC_EVENT_TYPE_STACK_RAISE);
-   EINA_SAFETY_ON_FALSE_GOTO(res, cleanup);
+   e_test_runner_ev_wait(tc->runner, E_TC_EVENT_TYPE_STACK_RAISE);
 
    // Expected stack result:
    // [Top] Green -> Red -> ... -> Blue  [Bottom]
@@ -891,9 +873,7 @@ tc_0160_multi_all_wins_lower2(E_TC *tc)
 
    // Lower Green
    e_test_runner_req_win_stack_set(tc->runner, tw_green, NULL, EINA_FALSE);
-
-   res = e_test_runner_ev_wait(tc->runner, E_TC_EVENT_TYPE_STACK_RAISE);
-   EINA_SAFETY_ON_FALSE_GOTO(res, cleanup);
+   e_test_runner_ev_wait(tc->runner, E_TC_EVENT_TYPE_STACK_RAISE);
 
    // Expected stack result:
    // [Top] Blue -> Red -> ... -> Green [Bottom]
@@ -986,8 +966,7 @@ tc_0180_multi_2wins_show1(E_TC *tc)
    e_tc_win_show(tc->data->tw_red);
 
    // wait for showing register_win
-   res = e_test_runner_ev_wait(tc->runner, E_TC_EVENT_TYPE_VIS_ON);
-   EINA_SAFETY_ON_FALSE_GOTO(res, cleanup);
+   e_test_runner_ev_wait(tc->runner, E_TC_EVENT_TYPE_VIS_ON);
 
    // Expected stack result:
    // [Top] Red -> Green [Bottom]
@@ -1057,8 +1036,7 @@ tc_0181_multi_2wins_show2(E_TC *tc)
    e_tc_win_show(tc->data->tw_green);
 
    // wait for showing register_win
-   res = e_test_runner_ev_wait(tc->runner, E_TC_EVENT_TYPE_VIS_ON);
-   EINA_SAFETY_ON_FALSE_GOTO(res, cleanup);
+   e_test_runner_ev_wait(tc->runner, E_TC_EVENT_TYPE_VIS_ON);
 
    // Expected stack result:
    // [Top] Green -> Blue [Bottom]
@@ -1128,8 +1106,7 @@ tc_0182_multi_2wins_show3(E_TC *tc)
    e_tc_win_show(tc->data->tw_blue);
 
    // wait for showing register_win
-   res = e_test_runner_ev_wait(tc->runner, E_TC_EVENT_TYPE_VIS_ON);
-   EINA_SAFETY_ON_FALSE_GOTO(res, cleanup);
+   e_test_runner_ev_wait(tc->runner, E_TC_EVENT_TYPE_VIS_ON);
 
    // Expected stack result:
    // [Top] Blue -> Red [Bottom]

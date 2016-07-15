@@ -59,9 +59,7 @@ _tc_win_show(E_TC *tc, E_TC_Win *tw)
 
    e_tc_win_geom_update(tw);
    e_tc_win_show(tw);
-
-   res = e_test_runner_ev_wait(tc->runner, E_TC_EVENT_TYPE_VIS_ON);
-   EINA_SAFETY_ON_FALSE_RETURN_VAL(res, EINA_FALSE);
+   e_test_runner_ev_wait(tc->runner, E_TC_EVENT_TYPE_VIS_ON);
 
    return EINA_TRUE;
 }
@@ -112,8 +110,7 @@ _tc_transient_for_pre_run(E_TC *tc)
                                     EINA_TRUE);
    EINA_SAFETY_ON_FALSE_GOTO(res, cleanup);
 
-   res = e_test_runner_ev_wait(tc->runner, E_TC_EVENT_TYPE_STACK_RAISE);
-   EINA_SAFETY_ON_FALSE_GOTO(res, cleanup);
+   e_test_runner_ev_wait(tc->runner, E_TC_EVENT_TYPE_STACK_RAISE);
 
    e_test_runner_work();
 
@@ -229,12 +226,10 @@ tc_0201_transient_for_raise(E_TC *tc)
    EINA_SAFETY_ON_FALSE_GOTO(res, cleanup);
 
    e_test_runner_req_win_stack_set(tc->runner, tw_parent, NULL, EINA_TRUE);
+   e_test_runner_ev_wait(tc->runner, E_TC_EVENT_TYPE_STACK_RAISE);
 
    // Expected stack result:
    // [Top] tw_child -> tw_parent -> tw_main [Bottom]
-
-   res = e_test_runner_ev_wait(tc->runner, E_TC_EVENT_TYPE_STACK_RAISE);
-   EINA_SAFETY_ON_FALSE_GOTO(res, cleanup);
 
    list = e_test_runner_req_win_info_list_get(tc->runner);
    EINA_SAFETY_ON_NULL_GOTO(list, cleanup);
@@ -300,18 +295,15 @@ tc_0202_transient_for_lower(E_TC *tc)
 
    // Raise Transient_for Parent window
    e_test_runner_req_win_stack_set(tc->runner, tw_parent, NULL, EINA_TRUE);
+   e_test_runner_ev_wait(tc->runner, E_TC_EVENT_TYPE_STACK_RAISE);
 
    // Expected stack result:
    // [Top] tw_child -> tw_parent -> tw_main [Bottom]
 
-   res = e_test_runner_ev_wait(tc->runner, E_TC_EVENT_TYPE_STACK_RAISE);
-   EINA_SAFETY_ON_FALSE_GOTO(res, cleanup);
 
    // lower tw_parent
    e_test_runner_req_win_stack_set(tc->runner, tw_parent, NULL, EINA_FALSE);
-
-   res = e_test_runner_ev_wait(tc->runner, E_TC_EVENT_TYPE_STACK_LOWER);
-   EINA_SAFETY_ON_FALSE_GOTO(res, cleanup);
+   e_test_runner_ev_wait(tc->runner, E_TC_EVENT_TYPE_STACK_LOWER);
 
    // Expected stack result:
    // [Top] tw_main -> ... -> tw_child -> tw_parent [Bottom]
@@ -397,9 +389,7 @@ tc_0203_transient_for_stack_above(E_TC *tc)
    EINA_SAFETY_ON_FALSE_GOTO(res, cleanup);
 
    e_test_runner_req_win_stack_set(tc->runner, tw_parent, tw_main, EINA_TRUE);
-
-   res = e_test_runner_ev_wait(tc->runner, E_TC_EVENT_TYPE_STACK_ABOVE);
-   EINA_SAFETY_ON_FALSE_GOTO(res, cleanup);
+   e_test_runner_ev_wait(tc->runner, E_TC_EVENT_TYPE_STACK_ABOVE);
 
    // Expected stack result:
    // [Top] tw_child -> tw_parent -> tw_main [Bottom]
@@ -467,17 +457,13 @@ tc_0204_transient_for_stack_below(E_TC *tc)
 
    // raise tw_parent
    e_test_runner_req_win_stack_set(tc->runner, tw_parent, NULL, EINA_TRUE);
-
-   res = e_test_runner_ev_wait(tc->runner, E_TC_EVENT_TYPE_STACK_RAISE);
-   EINA_SAFETY_ON_FALSE_GOTO(res, cleanup);
+   e_test_runner_ev_wait(tc->runner, E_TC_EVENT_TYPE_STACK_RAISE);
 
    // Expected stack result:
    // [Top] tw_child -> tw_parent -> tw_main [Bottom]
 
    e_test_runner_req_win_stack_set(tc->runner, tw_parent, tw_main, EINA_FALSE);
-
-   res = e_test_runner_ev_wait(tc->runner, E_TC_EVENT_TYPE_STACK_BELOW);
-   EINA_SAFETY_ON_FALSE_GOTO(res, cleanup);
+   e_test_runner_ev_wait(tc->runner, E_TC_EVENT_TYPE_STACK_BELOW);
 
    // Expected stack result:
    // [Top] tw_main -> tw_child -> tw_parent  [Bottom]
