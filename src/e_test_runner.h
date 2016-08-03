@@ -118,6 +118,7 @@ struct _E_TC_Win
    int          layer;      // value of E_Layer
    int          vis;        // visibility
    int          alpha;      // alpha window
+   Eina_Bool    animating;
 };
 
 struct _E_TC
@@ -138,7 +139,7 @@ Eina_Bool  e_test_runner_req_win_stack_set(E_Test_Runner *runner, E_TC_Win *tw, 
 Eina_Bool  e_test_runner_ev_wait(E_Test_Runner *runner, E_TC_Event_Type ev);
 
 E_TC_Win  *e_tc_win_add(E_TC_Win *parent, Elm_Win_Type type, Eina_Bool alpha, const char *name, int x, int y, int w, int h, Eina_Bool usr_geom, int layer, E_TC_Win_Color color);
-E_TC_Win  *e_tc_win_info_add(Ecore_Window native_win, Eina_Bool alpha, const char *name, int x, int y, int w, int h, int layer);
+E_TC_Win  *e_tc_win_info_add(Ecore_Window native_win, Eina_Bool alpha, Eina_Bool animating, const char *name, int x, int y, int w, int h, int layer);
 void       e_tc_win_del(E_TC_Win *tw);
 void       e_tc_win_geom_update(E_TC_Win *tw);
 void       e_tc_win_show(E_TC_Win *tw);
