@@ -873,7 +873,7 @@ tc_0160_multi_all_wins_lower2(E_TC *tc)
 
    // Lower Green
    e_test_runner_req_win_stack_set(tc->runner, tw_green, NULL, EINA_FALSE);
-   e_test_runner_ev_wait(tc->runner, E_TC_EVENT_TYPE_STACK_RAISE);
+   e_test_runner_ev_wait(tc->runner, E_TC_EVENT_TYPE_STACK_LOWER);
 
    // Expected stack result:
    // [Top] Blue -> Red -> ... -> Green [Bottom]

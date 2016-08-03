@@ -129,7 +129,7 @@ tc_0011_win_register(E_TC *tc)
 
    EINA_SAFETY_ON_NULL_RETURN_VAL(tc, EINA_FALSE);
 
-   tw = e_tc_win_info_add(_WIN_ID, EINA_FALSE, "tc", 0, 0, 1, 1, 0);
+   tw = e_tc_win_info_add(_WIN_ID, EINA_FALSE, EINA_FALSE, "tc", 0, 0, 1, 1, 0);
    EINA_SAFETY_ON_NULL_GOTO(tw, finish);
 
    /* check RegisterWindow method */

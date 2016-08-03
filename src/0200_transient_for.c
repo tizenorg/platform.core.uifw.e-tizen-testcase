@@ -300,7 +300,6 @@ tc_0202_transient_for_lower(E_TC *tc)
    // Expected stack result:
    // [Top] tw_child -> tw_parent -> tw_main [Bottom]
 
-
    // lower tw_parent
    e_test_runner_req_win_stack_set(tc->runner, tw_parent, NULL, EINA_FALSE);
    e_test_runner_ev_wait(tc->runner, E_TC_EVENT_TYPE_STACK_LOWER);

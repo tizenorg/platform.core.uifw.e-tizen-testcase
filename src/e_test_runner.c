@@ -7,6 +7,11 @@ int _log_dom = -1;
 struct tizen_policy *tizen_policy = NULL;
 struct tizen_surface *tizen_surface = NULL;
 
+typedef struct {
+     Eina_List *list;
+     Eina_Bool retry;
+} Window_Info_List;
+
 static void
 _e_test_runner_cb_resource_id(void *data,
                               struct tizen_resource *tizen_resource EINA_UNUSED,
@@ -84,43 +89,55 @@ _cb_method_win_info_list_get(void *data,
    const char *name = NULL, *text = NULL;
    Eldbus_Message_Iter *array, *ec;
    Ecore_Window target_win = 0;
-   Eina_List *list = data;
-   Eina_Bool res;
+   Window_Info_List *info_list = data;
+   Eina_Bool res, animating = EINA_FALSE;
+
+   if (!!!info_list)
+     goto finish;
 
    res = eldbus_message_error_get(msg, &name, &text);
    EINA_SAFETY_ON_TRUE_GOTO(res, finish);
 
-   res = eldbus_message_arguments_get(msg, "ua(usiiiiibb)", &target_win, &array);
+   res = eldbus_message_arguments_get(msg, "ua(usiiiiibbb)", &target_win, &array);
    EINA_SAFETY_ON_FALSE_GOTO(res, finish);
 
    while (eldbus_message_iter_get_and_next(array, 'r', &ec))
      {
         const char *win_name;
         int x, y, w, h, layer;
-        Eina_Bool visible, alpha;
+        Eina_Bool visible, alpha, effect = EINA_FALSE;
         Ecore_Window native_win;
         E_TC_Win *tw = NULL;
 
         res = eldbus_message_iter_arguments_get(ec,
-                                                "usiiiiibb",
-                                                &native_win,
+                                                "usiiiiibbb",
+                                               &native_win,
                                                 &win_name,
                                                 &x,
                                                 &y,
                                                 &w,
                                                 &h,
                                                 &layer,
+                                                &effect,
                                                 &visible,
                                                 &alpha);
+
+        if (effect)
+            animating = EINA_TRUE;
+
         if (!res)
           {
              WRN("Failed to get win info\n");
              continue;
           }
 
-        tw = e_tc_win_info_add(native_win, alpha, win_name, x, y, w, h, layer);
-        list = eina_list_append(list, tw);
+        tw = e_tc_win_info_add(native_win, alpha, effect, win_name, x, y, w, h, layer);
+        info_list->list = eina_list_append(info_list->list, tw);
      }
+
+   if (animating)
+     info_list->retry = EINA_TRUE;
+
 
 finish:
    if ((name) || (text))
@@ -332,21 +349,39 @@ Eina_List *
 e_test_runner_req_win_info_list_get(E_Test_Runner *runner)
 {
    Eldbus_Pending *p;
-   Eina_List *list = NULL;
-   list = eina_list_append(list, NULL);
+   Window_Info_List *info_list = NULL;
 
-   p = eldbus_proxy_call(runner->dbus.proxy,
-                         "GetWindowInfo",
-                         _cb_method_win_info_list_get,
-                         list,
-                         -1,
-                         "");
-   EINA_SAFETY_ON_NULL_RETURN_VAL(p, NULL);
+   info_list = E_NEW(Window_Info_List, 1);
 
-   elm_run();
-   list = eina_list_remove(list, NULL);
+   while (info_list)
+     {
+        p = eldbus_proxy_call(runner->dbus.proxy,
+                              "GetWindowInfo",
+                              _cb_method_win_info_list_get,
+                              info_list,
+                              -1,
+                              "");
+        EINA_SAFETY_ON_NULL_RETURN_VAL(p, NULL);
 
-   return list;
+        elm_run();
+
+        if (info_list->retry)
+          {
+             E_TC_Win *tw;
+             info_list->retry = EINA_FALSE;
+             EINA_LIST_FREE(info_list->list, tw)
+               {
+                  if (tw)
+                    e_tc_win_del(tw);
+               }
+
+             continue;
+          }
+
+        break;
+     }
+
+   return info_list->list;
 }
 
 Eina_Bool
@@ -523,6 +558,7 @@ err:
 E_TC_Win *
 e_tc_win_info_add(Ecore_Window native_win,
                   Eina_Bool alpha,
+                  Eina_Bool animating,
                   const char *name,
                   int x, int y,
                   int w, int h,
@@ -542,6 +578,7 @@ e_tc_win_info_add(Ecore_Window native_win,
    tw->h = h;
    tw->layer = layer;
    tw->alpha = alpha;
+   tw->animating = animating;
 
    return tw;
 }
@@ -695,7 +732,6 @@ _e_test_runner_init(E_Test_Runner *runner)
    TC_ADD( 301, "Noti Level 2",                 T_FUNC( 301, notification_level_2      ), 1);
    TC_ADD( 302, "Noti Level 3",                 T_FUNC( 302, notification_level_3      ), 1);
    TC_ADD( 303, "Noti Level Change",            T_FUNC( 303, notification_level_change ), 1);
-   /* TODO */
 #undef T_FUNC
 }
 
